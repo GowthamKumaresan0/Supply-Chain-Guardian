@@ -15,6 +15,7 @@ from pathlib import Path
 from flask import Flask, abort, jsonify, request, send_file, send_from_directory
 
 from .pipeline import STEPS, copy_baseline, run_scan
+from .agents.base import AgentFailed, friendly_error
 from .repo import PRESETS, TARGETS, FetchError, clone, ensure_lockfile, save_snapshot, slug_for, snapshot_dir
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -78,10 +79,14 @@ def _run_job(job: dict, preset: str | None, url: str | None) -> None:
                 save_snapshot(target, slug)
         job.update(status="done", slug=slug)
     except FetchError as e:
-        job.update(status="error", error=str(e))
+        job.update(status="error", error=str(e), failed_step="fetch")
+    except AgentFailed as e:
+        job.update(status="error", error=e.message, failed_step=e.step, failed_agent=e.agent)
     except Exception as e:  # surface, never crash the server
         traceback.print_exc()
-        job.update(status="error", error=f"{type(e).__name__}: {str(e)[:300]}")
+        running = [ev["step"] for ev in job["events"] if ev["status"] == "running"]
+        job.update(status="error", error=friendly_error(e), failed_step=running[-1] if running else None,
+                   detail=f"{type(e).__name__}: {str(e)[:300]}")
 
 
 @app.get("/")
