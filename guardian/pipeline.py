@@ -117,6 +117,21 @@ def _full_graph(target: Path, out: Path, slug: str) -> dict | None:
         return {"error": f"{type(e).__name__}: {str(e)[:200]}"}
 
 
+def _remediation(target: Path, out: Path, ranked, inv) -> dict:
+    """Fix proposals for human approval. Optional: a failure never breaks the scan.
+
+    A new scan invalidates the previous sandbox result and patch; reviewer decisions are kept."""
+    try:
+        from .remediation import plan_fixes
+        for stale in ("remediation_result.json", "remediation.patch"):
+            (out / stale).unlink(missing_ok=True)
+        if (out / "sandbox").exists():
+            shutil.rmtree(out / "sandbox", ignore_errors=True)
+        return plan_fixes(target, ranked, inv)
+    except Exception as e:
+        return {"fixes": [], "skipped": [], "error": f"{type(e).__name__}: {str(e)[:200]}"}
+
+
 def _files(target: Path, out: Path, workflows: list[str]) -> dict:
     def info(p: Path, name: str, role: str):
         return {"name": name, "role": role, "size": p.stat().st_size} if p.exists() else None
@@ -203,6 +218,7 @@ def run_scan(target: Path, out: Path, baseline: Path | None = None, *, emit: Emi
         "vulnerability_scan": {"source": "OSV.dev", **vstats},
         "full_graph": full_graph,
         "agents": agents_report,
+        "remediation": _remediation(target, out, ranked, inv),
         "ai": ai_status,
         "evidence_policy": "`evidence` entries are verified tool output. `ai` entries are model "
                            "inference generated from that evidence only and are never used for scoring.",
