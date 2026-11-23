@@ -67,6 +67,23 @@ the failed step named.
 cross-checks, KEV/EPSS enrichment, risk scoring, agent order and parallelism, retries and degradation, baseline
 detection, the Gemini client (model fallback, key redaction), the Flask API, and an end-to-end scan.
 
+### Fixes with human approval (Day 2)
+
+After the AI reasoning and next step, every vulnerable package with a published fix gets a **proposed code change**:
+
+- direct dependency → its version range is bumped in `package.json`
+- transitive dependency → a version-scoped npm `overrides` entry (`"minimist@1.2.0": "1.2.6"`)
+
+The reviewer sees the **current and proposed code side by side**, which advisories the fix closes, whether it is a
+patch, minor or MAJOR update, and any limits (e.g. copies bundled inside another package cannot be overridden).
+They **approve or reject** each fix with their name and an optional comment; decisions are logged with history in
+`output/<repo>/approvals.json`.
+
+**Apply approved fixes in a sandbox** copies the project to `output/<repo>/sandbox/` (the original is never changed),
+regenerates the lockfile with `npm install --package-lock-only --ignore-scripts`, re-scans it, and reports each fix as
+*resolved*, *partly resolved* or *not applied*. The combined change is saved as `remediation.patch` to review and apply
+by hand. Proposals are deterministic: the AI explains, it never writes code. Code: `guardian/remediation.py`.
+
 Design rules:
 - **Scores and facts come only from deterministic tools.** The LLM explains and never scores.
 - **Nothing from the target is installed or executed.** We parse files only.
