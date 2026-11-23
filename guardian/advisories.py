@@ -47,6 +47,12 @@ class AdvisoryClient:
         return out
 
 
+def fixed_from_range(rng: str) -> str:
+    """'<4.17.21' or '>=1.0.0 <1.2.6 || <0.2.4' -> '4.17.21, 1.2.6, 0.2.4' (upper bounds are the fixes)."""
+    import re
+    return ", ".join(dict.fromkeys(re.findall(r"(?<![<>=])<\s*v?([0-9][0-9A-Za-z.+-]*)", rng or "")))
+
+
 def ghsa_id(adv: dict) -> str:
     url = adv.get("url") or ""
     return url.rstrip("/").rsplit("/", 1)[-1] if "/advisories/" in url else f"NPM-{adv.get('id')}"
@@ -105,6 +111,7 @@ def cross_check(osv_findings: list[Finding], inv: Inventory, graph: DepGraph, cl
                 component=label, purl=comps[0].purl if comps else "",
                 scope="runtime" if any(not c.dev for c in comps) else "dev", location="package-lock.json",
                 dependency_paths=paths[:4], vuln_ids=[gid], cvss=float(cvss) if cvss else None,
+                fixed_version=fixed_from_range(adv.get("vulnerable_versions", "")),
                 references=[adv["url"]] if adv.get("url") else [],
                 evidence=[Evidence(source=SOURCE, detail=f"{label} matches {gid} (vulnerable versions "
                                    f"{adv.get('vulnerable_versions')}); severity {sev}; not returned by OSV.dev",
