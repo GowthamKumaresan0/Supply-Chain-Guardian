@@ -38,6 +38,35 @@ targets/nodegoat-modified ─┤                      (state under review)
  output/report.html  ·  output/guardian_report.json  ·  output/sbom*.cdx.json  ·  output/trivy-*.json
 ```
 
+### Six agents, orchestrated with LangGraph
+
+```
+START → [1] Discovery ─┬─► [2] Vulnerability ─► [3] Threat intelligence ─┬─► merge ─(baseline?)─► [5] Change detection ─► [6] Risk & explanation → report
+                       └─► [4] Supply-chain integrity ───────────────────┘        └──(no)───────────────────────┘         (Gemini via LangChain)
+```
+
+| Agent | Job | Sources / tools |
+|---|---|---|
+| 1 Discovery | inventory, dependency graph, SBOM, full multi-manifest graph | lockfile parser, networkx, CycloneDX, Syft, deptree |
+| 2 Vulnerability | CVE / GHSA / malware per name@version, cross-checked across 3 sources | OSV.dev, GitHub Advisory DB (npm bulk API), deps.dev |
+| 3 Threat intelligence | real-world exploitation and package health | CISA KEV, FIRST EPSS, deps.dev (deprecation, licenses, OpenSSF Scorecard) |
+| 4 Supply-chain integrity | typosquats, install scripts, sources, hashes, Dockerfile and CI rules | rapidfuzz + npm downloads, rules, Trivy |
+| 5 Change detection | what is new since the last known-good copy (runs only with a baseline) | lockfile diff, baseline re-scan |
+| 6 Risk & explanation | deterministic 0-100 score, then Gemini explains the top findings | risk model, `langchain-google-genai`, guardrails |
+
+All external sources are free and need no API key (Sonatype OSS Index was evaluated but now requires an account).
+The risk score uses exploit intelligence: +15 if the CVE is in CISA KEV, +10/+5 for EPSS ≥ 50% / ≥ 10%, -5 for EPSS < 1%,
+and confidence is "High (2 sources)" when two advisory databases agree.
+
+**Failure handling.** Network agents retry with backoff (LangGraph `RetryPolicy`). If one advisory source fails, the
+others' results are kept and a warning is recorded. If an agent still fails, it degrades: its step shows a clear error,
+the scan continues, and the results page shows a "Partial results" bar. Only a discovery failure stops the scan, with
+the failed step named.
+
+**Tests.** `python -m pytest tests` runs 35 offline tests (all external services are faked): semver matching, advisory
+cross-checks, KEV/EPSS enrichment, risk scoring, agent order and parallelism, retries and degradation, baseline
+detection, the Gemini client (model fallback, key redaction), the Flask API, and an end-to-end scan.
+
 Design rules:
 - **Scores and facts come only from deterministic tools.** The LLM explains and never scores.
 - **Nothing from the target is installed or executed.** We parse files only.
@@ -83,6 +112,13 @@ The Journey (guided story) · Files (JSON tree viewer) · How We Discovered · S
 Dependency Graph (tree/network) · Vulnerabilities (bubble map) · Suspicious Changes (case files) · All Findings · Final Report.
 Repos without a lockfile are resolved with `npm install --package-lock-only --ignore-scripts` (no code runs).
 Each scan of a GitHub URL is snapshotted, and the next scan of the same repo shows what changed.
+
+**Full Graph tab.** Every scan also maps every manifest in the repository (npm, Dockerfiles,
+docker-compose, GitHub Actions, plus Python/Go/Java/Ruby/PHP/Rust/.NET when present) into one radial graph:
+project → ecosystem → manifest → packages by depth. Node size is the number of dependents, and colour is the
+worst Guardian finding on that package. Click a node to see every path to it, its evidence, and its findings.
+The engine is vendored in `guardian/deptree/` and writes `output/<repo>/deptree_graph.json` (npm graphs are
+cross-checked with `npm ls`). If it fails, the rest of the scan is unaffected.
 
 Manual CLI run and options:
 ```powershell
