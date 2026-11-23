@@ -114,3 +114,6 @@ def test_run_scan_end_to_end(app_dir, fake_services, tmp_path):
     assert top["kev"] is True and top["epss"] == 0.2
     assert any("CISA" in x for x in top["risk_rationale"])
     assert events[-1][:2] == ("report", "done")
+    fixes = {f["package"]: f for f in r["remediation"]["fixes"]}
+    assert fixes["lodash"]["kind"] == "direct" and fixes["lodash"]["to_version"] == "4.17.21"
+    assert fixes["minimist"]["kind"] == "override" and fixes["minimist"]["to_version"] == "1.2.6"
