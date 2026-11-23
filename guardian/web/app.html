@@ -340,6 +340,31 @@ input.in:focus,select.in:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px 
 .tabmenu button:hover{background:var(--surface-2)} .tabmenu button.on{color:var(--brand);font-weight:600}
 .tabmenu.hidden{display:none}
 .tstep .ico{font-size:14px;font-weight:700;color:var(--muted)}
+/* ---------- FIXES (human approval) ---------- */
+.fixblk{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface)}
+.fixhead{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:6px}
+.fxst{font-size:11.5px;font-weight:600;border-radius:4px;padding:2px 7px;white-space:nowrap;border:1px solid var(--line)}
+.fxst.ok{color:var(--ev);border-color:var(--ev-line);background:var(--ev-soft)} .fxst.no{color:var(--crit);border-color:#fecaca;background:var(--crit-soft)} .fxst.wait{color:var(--muted)}
+.chip.bump-patch{background:var(--ev-soft);color:var(--ev)} .chip.bump-minor{background:var(--low-soft);color:var(--low)} .chip.bump-major{background:var(--crit-soft);color:var(--crit);font-weight:700}
+.dv{border:1px solid var(--line);border-radius:8px;overflow:auto;max-height:340px;font-family:var(--mono);font-size:12px}
+.dvh{display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;background:var(--surface-2);border-bottom:1px solid var(--line);font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.dvh span{padding:6px 10px} .dvh span+span{border-left:1px solid var(--line)}
+.dv table{border-collapse:collapse;width:100%;table-layout:fixed}
+.dv td{padding:1px 8px;white-space:pre;overflow:hidden;text-overflow:ellipsis;vertical-align:top}
+.dv td.ln{width:36px;color:var(--faint);text-align:right;user-select:none;background:var(--surface-2)}
+.dv td.o{border-right:1px solid var(--line)}
+.dv tr.del td.o,.dv tr.chg td.o{background:#fdecec} .dv tr.add td.n,.dv tr.chg td.n{background:#e9f8ee}
+.dv tr.gap td{text-align:center;color:var(--faint);background:var(--surface-2)}
+.fxdec{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.fxdec .in{padding:7px 10px;font-size:13px} .fxdec .in.need{border-color:var(--crit)}
+.fxsteps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.fxsteps div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;background:var(--surface)}
+.fxsteps b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;margin-right:8px}
+.fxbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.fxcounts{display:flex;gap:18px;flex-wrap:wrap;font-size:13px} .fxcounts b{font-size:18px;margin-right:4px}
+.fxrow{border-top:1px solid var(--line-2)} .fxrow-head{display:flex;gap:10px;align-items:center;padding:10px 16px;cursor:pointer;flex-wrap:wrap} .fxrow-head:hover{background:var(--surface-2)}
+.fxrow.open .fxrow-head{background:var(--surface-2)} .fxrow-body{padding:14px 16px 18px;border-top:1px solid var(--line-2)}
+@media (max-width:900px){.fxsteps{grid-template-columns:1fr 1fr}}
 /* ---------- error states ---------- */
 .tstep.error .ico{border-color:#fecaca;background:var(--crit-soft)} .tstep.error:before{background:#fecaca}
 .tstep.error .msg{color:var(--crit)}
@@ -472,13 +497,13 @@ function bindFindingLinks(root){ root.querySelectorAll('[data-fid]').forEach(n =
 
 /* ================= router ================= */
 const MORE_TABS = ['files','discovery','chain'];
-const TABS = [['journey','The Journey'],['findings','All Findings'],['vulns','Vulnerabilities'],['tamper','Suspicious Changes'],['fullgraph','Full Graph'],['graph','Dependency Graph'],['agents','Agents'],['report','Final Report'],['files','Files'],['discovery','How We Discovered'],['chain','Supply Chain']];
+const TABS = [['journey','The Journey'],['findings','All Findings'],['vulns','Vulnerabilities'],['tamper','Suspicious Changes'],['fullgraph','Full Graph'],['graph','Dependency Graph'],['fixes','Fixes'],['agents','Agents'],['report','Final Report'],['files','Files'],['discovery','How We Discovered'],['chain','Supply Chain']];
 async function route(){
   closeDrawer();
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'scan' && parts[1]) return scanView(parts[1]);
   if (parts[0] === 'r' && parts[1]) {
-    if (SLUG !== parts[1] || !R) { $('#main').innerHTML = '<div class="empty"><span class="spin"></span> Loading report…</div>'; R = await api('/api/report/' + parts[1]); F = R.findings; SLUG = parts[1]; }
+    if (SLUG !== parts[1] || !R) { $('#main').innerHTML = '<div class="empty"><span class="spin"></span> Loading report…</div>'; R = await api('/api/report/' + parts[1]); F = R.findings; SLUG = parts[1]; FIX = await api('/api/report/' + SLUG + '/fixes').catch(() => null); }
     return resultView(parts[2] || 'journey');
   }
   landing();
@@ -597,7 +622,7 @@ function resultView(tab){
   const nNew = F.filter(f => f.changed).length;
   const nTamper = F.filter(f => !['vulnerability','malicious-package'].includes(f.category)).length;
   const nV = new Set(F.filter(f => ['vulnerability','malicious-package'].includes(f.category)).map(f => f.component)).size;
-  const counts = {vulns: nV, tamper: nTamper, findings: F.length};
+  const counts = {vulns: nV, tamper: nTamper, findings: F.length, fixes: (FIX && FIX.plan.fixes.length) || null};
   $('#tabs').classList.remove('hidden');
   const LABEL = {journey:'Overview', fullgraph:'Full graph', graph:'Risk paths'};
   const tabBtn = ([id,t]) => `<button class="tab ${id===tab?'active':''}" data-t="${id}">${LABEL[id]||t}${counts[id]!=null?` <span class="n">${fmt(counts[id])}</span>`:''}</button>`;
@@ -608,7 +633,7 @@ function resultView(tab){
   $('#moreBtn').onclick = e => { e.stopPropagation(); const m = $('#moreMenu'), r = e.currentTarget.getBoundingClientRect();
     m.style.top = r.bottom + 'px'; m.style.left = Math.min(r.left, innerWidth - 240) + 'px'; m.classList.toggle('hidden'); };
   document.addEventListener('click', () => { const m = $('#moreMenu'); if (m) m.classList.add('hidden'); }, {once: true});
-  const fn = {journey, files, discovery, chain, graph, fullgraph: window.fullgraph, agents: agentsView, vulns, tamper, findings, report}[tab] || journey;
+  const fn = {journey, files, discovery, chain, graph, fullgraph: window.fullgraph, agents: agentsView, fixes: fixesView, vulns, tamper, findings, report}[tab] || journey;
   $('#main').innerHTML = '<div class="view" id="v"></div>';
   fn($('#v'));
   const deg = (R.agents && R.agents.degraded) || [];
@@ -1283,6 +1308,103 @@ function agentsView(el){
     </div>`;
   el.querySelectorAll('[data-ag]').forEach(c => c.onclick = () => { agSel = agSel === c.dataset.ag ? null : c.dataset.ag; agentsView(el); });
 }
+
+/* ================= FIXES: proposals, human approval, sandbox apply ================= */
+let FIX = null, fixFilter = {status: '', bump: ''}, fixOpen = null;
+const fixDecision = id => (FIX && FIX.decisions[id]) || {decision: 'pending'};
+function fixForFinding(f){
+  if (!FIX) return '';
+  const fx = FIX.plan.fixes.find(x => x.findings.includes(f.id));
+  if (fx) return `<div class="fixblk" id="fixblk-${esc(fx.id)}">${fixCard(fx, true)}</div>`;
+  const sk = (FIX.plan.skipped || []).find(x => x.findings.includes(f.id));
+  return sk ? `<div class="fixblk"><div class="sec-t">Proposed fix</div><div class="small muted">No automatic fix: ${esc(sk.reason)}.</div></div>` : '';
+}
+function diffTable(rows){
+  if (!rows || !rows.length) return '<div class="small muted">No changes.</div>';
+  return `<div class="dv"><div class="dvh"><span>Current code</span><span>Proposed code</span></div><table>${rows.map(r => r.t === 'gap'
+    ? '<tr class="gap"><td colspan="4">⋯</td></tr>'
+    : `<tr class="${r.t}"><td class="ln">${r.ol ?? ''}</td><td class="o">${r.o != null ? esc(r.o) : ''}</td><td class="ln">${r.nl ?? ''}</td><td class="n">${r.n != null ? esc(r.n) : ''}</td></tr>`).join('')}</table></div>`;
+}
+function fixCard(fx, inDrawer){
+  const d = fixDecision(fx.id);
+  const st = {approved: ['Approved', 'ok'], rejected: ['Rejected', 'no'], pending: ['Waiting for review', 'wait']}[d.decision] || ['Waiting for review', 'wait'];
+  let reviewer = ''; try { reviewer = localStorage.getItem('guardian-reviewer') || ''; } catch (e) {}
+  return `<div class="sec-t">Proposed fix · needs your approval</div>
+    <div class="fixhead"><b>${esc(fx.summary)}</b><span class="fxst ${st[1]}">${st[0]}</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px"><span class="chip bump-${fx.bump}">${fx.bump} update</span><span class="chip">${fx.kind === 'direct' ? 'direct dependency' : 'transitive · npm override'}</span>${scopeChip(fx.scope)}<span class="badge b-${fx.max_level}"><i class="dot"></i>${fx.max_level} · ${fx.max_risk}</span></div>
+    <p class="small" style="margin:0 0 10px">${esc(fx.why)}</p>
+    ${diffTable(fx.diff)}
+    <div class="fxdec">
+      <input class="in" data-fx-rev placeholder="Your name" value="${esc(d.decision !== 'pending' ? d.reviewer : reviewer)}">
+      <input class="in" data-fx-com placeholder="Comment (optional)" value="${esc(d.decision !== 'pending' ? d.comment : '')}" style="flex:1;min-width:160px">
+      <button class="btn primary" data-fx-act="approved" data-fx="${esc(fx.id)}">Approve</button>
+      <button class="btn" data-fx-act="rejected" data-fx="${esc(fx.id)}">Reject</button>
+      ${d.decision !== 'pending' ? `<button class="btn ghost" data-fx-act="pending" data-fx="${esc(fx.id)}">Undo</button>` : ''}
+    </div>
+    ${d.decision !== 'pending' ? `<div class="xs muted" style="margin-top:6px">${st[0]} by <b>${esc(d.reviewer)}</b> · ${new Date(d.at).toLocaleString()}${d.comment ? ' · “' + esc(d.comment) + '”' : ''}</div>` : ''}
+    ${inDrawer ? `<div class="xs muted" style="margin-top:8px">Approved fixes are applied to a sandbox copy from the <a href="#/r/${SLUG}/fixes">Fixes</a> tab. The original repository is never changed.</div>` : ''}`;
+}
+document.addEventListener('click', async ev => {
+  const b = ev.target.closest('[data-fx-act]'); if (!b) return;
+  ev.preventDefault(); ev.stopPropagation();
+  const box = b.closest('.fixblk, .fxrow-body'), id = b.dataset.fx;
+  const reviewer = (box.querySelector('[data-fx-rev]') || {}).value || '', comment = (box.querySelector('[data-fx-com]') || {}).value || '';
+  if (b.dataset.fxAct !== 'pending' && !reviewer.trim()) { const r = box.querySelector('[data-fx-rev]'); r.focus(); r.classList.add('need'); return; }
+  try { localStorage.setItem('guardian-reviewer', reviewer); } catch (e) {}
+  b.disabled = true;
+  try {
+    FIX.decisions[id] = await api(`/api/report/${SLUG}/fixes/${encodeURIComponent(id)}/decision`, {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({decision: b.dataset.fxAct, reviewer, comment})});
+  } catch (e) { alert('Could not save the decision: ' + e.message); b.disabled = false; return; }
+  const fx = FIX.plan.fixes.find(x => x.id === id);
+  if (box.classList.contains('fixblk')) box.innerHTML = fixCard(fx, true);
+  else if ($('#v') && location.hash.endsWith('/fixes')) fixesView($('#v'));
+});
+
+function fixesView(el){
+  if (!FIX || !FIX.plan) { el.innerHTML = `<div class="vhead"><div><h2>Fixes</h2><p>Run a new scan to get fix proposals.</p></div></div>`; return; }
+  const P = FIX.plan, res = FIX.result;
+  const cnt = {pending: 0, approved: 0, rejected: 0}; P.fixes.forEach(f => cnt[fixDecision(f.id).decision]++);
+  const rows = P.fixes.filter(f => (!fixFilter.status || fixDecision(f.id).decision === fixFilter.status) && (!fixFilter.bump || f.bump === fixFilter.bump));
+  const stLabel = {approved: 'Approved', rejected: 'Rejected', pending: 'Pending'};
+  el.innerHTML = `<div class="vhead"><div><h2>Fixes</h2><p>Every vulnerable package with a published fix gets a proposed code change. <b>Nothing is applied until a person approves it</b>, and approved fixes go into a sandbox copy that is re-scanned to prove the fix worked.</p></div></div>
+    <div class="fxsteps"><div><b>1</b>Review the old and new code</div><div><b>2</b>Approve or reject each fix</div><div><b>3</b>Apply approved fixes in a sandbox</div><div><b>4</b>Check the re-scan, download the patch</div></div>
+    <div class="card pad fxbar">
+      <div class="fxcounts"><span><b>${cnt.pending}</b> pending</span><span><b style="color:var(--ev)">${cnt.approved}</b> approved</span><span><b style="color:var(--crit)">${cnt.rejected}</b> rejected</span><span class="muted">${(P.skipped || []).length} need a manual fix</span></div>
+      <button class="btn primary" id="fxApply" ${cnt.approved ? '' : 'disabled'}>Apply ${cnt.approved || ''} approved fix${cnt.approved === 1 ? '' : 'es'} in a sandbox</button>
+    </div>
+    <div id="fxResult">${res ? fixResult(res) : ''}</div>
+    <div class="card" style="overflow:hidden;margin-top:16px">
+      <div class="toolbar"><select class="in" id="fxS"><option value="">All decisions</option>${['pending','approved','rejected'].map(s => `<option value="${s}" ${fixFilter.status===s?'selected':''}>${stLabel[s]}</option>`).join('')}</select>
+        <select class="in" id="fxB"><option value="">All update sizes</option>${['patch','minor','major'].map(s => `<option value="${s}" ${fixFilter.bump===s?'selected':''}>${s}</option>`).join('')}</select>
+        <span class="small muted">${rows.length} of ${P.fixes.length} fixes, highest risk first</span></div>
+      ${rows.map(f => { const d = fixDecision(f.id).decision; return `<div class="fxrow ${fixOpen === f.id ? 'open' : ''}">
+        <div class="fxrow-head" data-fxopen="${esc(f.id)}"><span class="badge b-${f.max_level}"><i class="dot"></i>${f.max_risk}</span><b class="mono" style="font-size:13px">${esc(f.package)}</b><span class="mono small">${esc(f.from_version)} → ${esc(f.to_version)}</span><span class="chip bump-${f.bump}">${f.bump}</span><span class="small muted">${f.kind === 'direct' ? 'direct' : 'override'} · ${f.advisories.length} advisor${f.advisories.length === 1 ? 'y' : 'ies'}</span><span class="fxst ${d === 'approved' ? 'ok' : d === 'rejected' ? 'no' : 'wait'}" style="margin-left:auto">${stLabel[d]}</span></div>
+        ${fixOpen === f.id ? `<div class="fxrow-body">${fixCard(f, false)}</div>` : ''}</div>`; }).join('') || '<div class="empty">No fixes match.</div>'}
+    </div>
+    ${(P.skipped || []).length ? `<div class="card pad" style="margin-top:16px"><div class="eyebrow" style="margin-bottom:8px">Needs a manual fix (${P.skipped.length})</div><table class="tbl"><tbody>${P.skipped.map(s => `<tr><td class="mono xs">${esc(s.package)}</td><td class="small">${esc(s.reason)}</td></tr>`).join('')}</tbody></table></div>` : ''}
+    <p class="xs muted" style="margin-top:14px">${esc(P.policy || '')}</p>`;
+  $('#fxS').onchange = e => { fixFilter.status = e.target.value; fixesView(el); };
+  $('#fxB').onchange = e => { fixFilter.bump = e.target.value; fixesView(el); };
+  el.querySelectorAll('[data-fxopen]').forEach(h => h.onclick = () => { fixOpen = fixOpen === h.dataset.fxopen ? null : h.dataset.fxopen; fixesView(el); });
+  $('#fxApply').onclick = async () => {
+    const btn = $('#fxApply'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Applying in sandbox, regenerating lockfile and re-scanning…';
+    try { FIX.result = await api(`/api/report/${SLUG}/fixes/apply`, {method: 'POST'}); }
+    catch (e) { $('#fxResult').innerHTML = `<div class="card pad scan-result err" style="margin-top:12px"><div><b>Could not apply the fixes</b><div class="small">${esc(e.message)}</div></div></div>`; btn.disabled = false; btn.textContent = 'Try again'; return; }
+    fixesView(el);
+  };
+}
+function fixResult(r){
+  const lbl = {resolved: ['Resolved', 'ok'], 'partly resolved': ['Partly resolved', 'wait'], 'not applied': ['Not applied', 'no']};
+  return `<div class="card pad" style="margin-top:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><div class="eyebrow">Sandbox result · ${new Date(r.applied_at).toLocaleString()}</div>
+      <h3 style="margin:4px 0 0;font-size:17px">${r.resolved} of ${r.total} approved fixes verified by re-scan</h3></div>
+      <a class="btn" href="/api/report/${SLUG}/fixes/patch">Download patch (${fmt(r.patch_lines)} lines)</a></div>
+    <table class="tbl" style="margin-top:12px"><thead><tr><th>Package</th><th>Change</th><th>Installed now</th><th>Advisories fixed</th><th>Result</th></tr></thead><tbody>
+      ${r.results.map(x => `<tr><td class="mono xs">${esc(x.package)}</td><td class="mono xs">${esc(x.from_version)} → ${esc(x.to_version)}</td><td class="mono xs">${esc(x.installed_now.join(', ') || '—')}</td><td>${x.advisories_fixed}${x.advisories_left.length ? ` <span class="xs muted">(${x.advisories_left.length} left)</span>` : ''}</td><td><span class="fxst ${lbl[x.status][1]}">${lbl[x.status][0]}</span>${x.note ? `<div class="xs muted" style="margin-top:4px;max-width:260px;white-space:normal">${esc(x.note)}</div>` : ''}</td></tr>`).join('')}</tbody></table>
+    <div class="eyebrow" style="margin:16px 0 8px">package.json in the sandbox</div>${diffTable(r.package_json_diff)}
+    <p class="xs muted" style="margin:10px 0 0">Lockfile regenerated with <code>${esc(r.lockfile_command)}</code> (no install scripts run). The original repository was not changed; apply the patch yourself after review.</p></div>`;
+}
 /* ================= 6. VULNERABILITIES ================= */
 function vulns(el){
   const V = F.filter(f => ['vulnerability','malicious-package'].includes(f.category));
@@ -1420,6 +1542,7 @@ function findingDetail(f){
       ${a.evidence_used?.length?`<dt>Evidence relied on</dt><dd>${a.evidence_used.map(s=>`<span class="chip">${esc(s)}</span>`).join(' ')}</dd>`:''}</dl>
       ${isLLM?`<div class="guard"><span>Guardrails:</span><span><b>✔</b> ${a.unverified_ids_removed.length} invented IDs</span><span><b>✔</b> ${(a.evidence_claims_rejected||[]).length} unsupported claims</span><span><b>✔</b> score not changed by AI</span></div>`:''}</div>`
      : `<div class="small muted">Not among the top ${R.ai.sent_findings} sent to the AI (free-tier budget). The evidence and score above are complete.</div>`}
+    ${fixForFinding(f)}
   </div>`;
 }
 let fs = {q:'', l:'', c:'', s:'', ai:true, nw:false}, selF = null;
