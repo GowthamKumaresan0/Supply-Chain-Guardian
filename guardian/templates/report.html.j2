@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supply Chain Guardian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+{% raw %}
+<style>
+:root{
+  --bg:#f5f7fb; --surface:#ffffff; --surface-2:#f9fafc; --ink:#0f172a; --ink-2:#334155; --muted:#64748b; --faint:#94a3b8;
+  --line:#e6e9f0; --line-2:#eef1f6;
+  --brand:#4338ca; --brand-2:#6366f1; --brand-soft:#eef0ff; --teal:#0d9488; --teal-soft:#e6f6f4;
+  --crit:#dc2626; --crit-soft:#fdecec; --high:#ea580c; --high-soft:#fff1e7; --med:#ca8a04; --med-soft:#fdf6e3;
+  --low:#2563eb; --low-soft:#e9f0ff; --info:#64748b; --info-soft:#f1f5f9;
+  --ev:#15803d; --ev-soft:#effaf3; --ev-line:#bfe6cd; --ai:#7c3aed; --ai-soft:#f6f1ff; --ai-line:#dccbfb;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 16px rgba(15,23,42,.05);
+  --radius:14px; --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:14.5px/1.55 var(--sans);-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01"}
+a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+.mono,code{font-family:var(--mono);font-size:12.5px}
+code{background:var(--line-2);padding:1px 6px;border-radius:5px;color:var(--ink-2);word-break:break-all}
+h1,h2,h3,h4{margin:0;letter-spacing:-.015em;color:var(--ink)}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .small{font-size:12.5px} .xs{font-size:11.5px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- top bar + tabs ---------- */
+.topbar{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.topbar-inner{max-width:1320px;margin:0 auto;padding:14px 24px 0;display:flex;flex-direction:column;gap:12px}
+.brandrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--teal));display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 4px 12px rgba(67,56,202,.25)}
+.brandtxt b{display:block;font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.brandtxt span{font-size:12px;color:var(--muted)}
+.meta-chips{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.mchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--ink-2);background:var(--surface-2);white-space:nowrap}
+.mchip i{width:7px;height:7px;border-radius:50%;background:var(--teal);display:inline-block}
+.mchip.ai i{background:var(--ai)}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin:0 -6px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;border:0;background:none;font:inherit;font-size:13.5px;font-weight:500;color:var(--muted);padding:10px 12px 12px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:7px}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.tab .count{font-size:11px;background:var(--line-2);color:var(--muted);border-radius:999px;padding:0 7px;font-weight:600}
+.tab.active .count{background:var(--brand-soft);color:var(--brand)}
+
+main{max-width:1320px;margin:0 auto;padding:28px 24px 80px}
+section.view{display:none;animation:fade .25s ease} section.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.vhead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.vhead h2{font-size:22px;font-weight:700} .vhead p{margin:4px 0 0;color:var(--muted);max-width:760px}
+
+/* ---------- primitives ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:20px}
+.grid{display:grid;gap:16px}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g-side{grid-template-columns:minmax(0,1.55fr) minmax(0,1fr)}
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.b-Critical{background:var(--crit-soft);color:var(--crit)} .b-High{background:var(--high-soft);color:var(--high)}
+.b-Medium{background:var(--med-soft);color:#a16207} .b-Low{background:var(--low-soft);color:var(--low)} .b-Info{background:var(--info-soft);color:var(--info)}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:currentColor}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:6px;background:var(--line-2);color:var(--ink-2);white-space:nowrap}
+.chip.new{background:var(--crit);color:#fff;font-weight:700;letter-spacing:.03em}
+.chip.aich{background:var(--ai-soft);color:var(--ai);font-weight:600}
+.chip.scope-runtime{background:#fef3c7;color:#92400e} .chip.scope-dev{background:var(--line-2);color:var(--muted)}
+.chip.scope-build{background:#e0f2fe;color:#075985} .chip.scope-ci{background:#ede9fe;color:#5b21b6}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.btn:hover{border-color:var(--brand-2);color:var(--brand)}
+.btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)} .btn.primary:hover{background:var(--brand-2);color:#fff}
+input.search,select.sel{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:9px;padding:8px 11px;background:var(--surface);color:var(--ink);outline:none}
+input.search:focus,select.sel:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px var(--brand-soft)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+
+/* ---------- overview ---------- */
+.hero{padding:26px 28px;background:linear-gradient(120deg,#ffffff 0%,#f4f3ff 55%,#eafaf7 100%);border:1px solid var(--line);border-radius:18px;margin-bottom:18px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.hero h1{font-size:28px;font-weight:800;letter-spacing:-.025em}
+.hero .tagline{font-size:13px;font-weight:600;color:var(--brand);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.hero p{margin:6px 0 0;color:var(--ink-2);max-width:620px}
+.hero-stats{display:flex;gap:28px}
+.hero-stats div b{display:block;font-size:26px;font-weight:800;letter-spacing:-.02em}
+.hero-stats div span{font-size:12px;color:var(--muted)}
+.cp{padding:20px 22px;position:relative;overflow:hidden}
+.cp .q{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;margin-bottom:14px}
+.cp .qi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center}
+.cp .big{font-size:38px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.cp .bigsub{color:var(--muted);font-size:13px;margin:4px 0 14px}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line-2);padding-top:12px}
+.kv b{display:block;font-size:17px;font-weight:700} .kv span{font-size:11.5px;color:var(--muted)}
+.changes li{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:13px;border-bottom:1px dashed var(--line-2)}
+.changes li:last-child{border-bottom:0}
+.changes .k{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--crit);background:var(--crit-soft);padding:1px 6px;border-radius:4px;white-space:nowrap;margin-top:2px}
+ul.clean{list-style:none;margin:0;padding:0}
+.stack{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--line-2);margin:6px 0 12px}
+.stack div{height:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+.pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;margin:18px 0}
+.step{padding:18px 18px 16px;position:relative;border-right:1px solid var(--line-2)}
+.step:last-child{border-right:0}
+.step .n{width:26px;height:26px;border-radius:8px;background:var(--brand-soft);color:var(--brand);font-weight:800;font-size:12px;display:grid;place-items:center;margin-bottom:10px}
+.step h4{font-size:14px;font-weight:700} .step p{margin:3px 0 10px;font-size:12.5px;color:var(--muted)}
+.step .m{font-size:20px;font-weight:800;letter-spacing:-.02em} .step .ml{font-size:11.5px;color:var(--muted)}
+.step.ai .n{background:var(--ai-soft);color:var(--ai)}
+
+.aibox{background:var(--ai-soft);border:1px solid var(--ai-line);border-radius:var(--radius);padding:20px 22px}
+.aibox .lbl{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ai);margin-bottom:8px}
+.aibox p{margin:0 0 10px;color:var(--ink-2)}
+.fixfirst li{display:flex;gap:12px;align-items:center;padding:11px 4px;border-bottom:1px solid var(--line-2);cursor:pointer;border-radius:8px}
+.fixfirst li:hover{background:var(--surface-2)}
+.fixfirst li:last-child{border-bottom:0}
+.rank{width:24px;height:24px;border-radius:7px;background:var(--line-2);font-size:12px;font-weight:700;display:grid;place-items:center;flex:none;color:var(--ink-2)}
+.fixfirst .t{font-size:13.5px;font-weight:600;line-height:1.35} .fixfirst .s{font-size:12px;color:var(--muted)}
+.catbars .row{display:grid;grid-template-columns:150px 1fr 40px;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+.catbars .tr{height:8px;background:var(--line-2);border-radius:5px;overflow:hidden} .catbars .tr div{height:100%;background:var(--brand-2);border-radius:5px}
+
+/* ---------- findings master/detail ---------- */
+.md{display:grid;grid-template-columns:400px minmax(0,1fr);gap:16px;align-items:start}
+.filters{display:flex;flex-wrap:wrap;gap:8px;padding:14px;border-bottom:1px solid var(--line)}
+.filters input.search{flex:1 1 100%}
+.filters select.sel{flex:1 1 30%}
+.toggles{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.tg{appearance:none;font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:4px 11px;cursor:pointer}
+.tg.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.flist{max-height:calc(100vh - 290px);overflow:auto}
+.fitem{padding:12px 14px;border-bottom:1px solid var(--line-2);cursor:pointer;border-left:3px solid transparent}
+.fitem:hover{background:var(--surface-2)}
+.fitem.sel{background:var(--brand-soft);border-left-color:var(--brand)}
+.fitem .t{font-size:13.5px;font-weight:600;line-height:1.35;margin:5px 0 3px;color:var(--ink)}
+.fitem .c{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.fitem .top{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.lcount{padding:10px 14px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line-2);background:var(--surface-2)}
+.detail{position:sticky;top:120px}
+.dhead{padding:22px 24px 18px;border-bottom:1px solid var(--line)}
+.dhead h3{font-size:19px;font-weight:700;line-height:1.3;margin:8px 0 6px}
+.dbody{padding:20px 24px;display:grid;gap:18px}
+.dl{display:grid;grid-template-columns:150px 1fr;gap:8px 16px;font-size:13.5px}
+.dl dt{color:var(--muted);font-weight:500} .dl dd{margin:0;min-width:0}
+.pathc{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0 6px}
+.pnode{font-family:var(--mono);font-size:11.5px;padding:3px 8px;border-radius:6px;background:var(--line-2);color:var(--ink-2)}
+.pnode.root{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.pnode.leaf{background:var(--crit-soft);color:var(--crit);font-weight:600}
+.parr{color:var(--faint);font-size:12px}
+.sec-t{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.evbox{background:var(--ev-soft);border:1px solid var(--ev-line);border-radius:12px;padding:14px 16px}
+.evbox .sec-t{color:var(--ev)}
+.evbox li{font-size:13px;padding:6px 0;border-bottom:1px solid var(--ev-line);color:var(--ink-2)} .evbox li:last-child{border-bottom:0}
+.evbox .src{font-weight:700;color:var(--ev);margin-right:4px}
+.aiblk{background:var(--ai-soft);border:1px solid var(--ai-line);border-radius:12px;padding:14px 16px}
+.aiblk .sec-t{color:var(--ai)}
+.aiq{display:grid;grid-template-columns:150px 1fr;gap:6px 14px;font-size:13px}
+.aiq dt{font-weight:600;color:var(--ai)} .aiq dd{margin:0;color:var(--ink-2)}
+.guard{margin-top:12px;padding-top:10px;border-top:1px dashed var(--ai-line);font-size:12px;color:var(--ink-2);display:flex;gap:14px;flex-wrap:wrap}
+.guard b{color:var(--ev)}
+.score{display:flex;align-items:center;gap:16px}
+.gauge{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;flex:none}
+.gauge span{width:50px;height:50px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-weight:800;font-size:17px}
+.rat{display:grid;gap:4px;font-size:12.5px;flex:1}
+.rat div{display:flex;gap:8px;align-items:baseline}
+.rat .d{font-family:var(--mono);font-weight:600;min-width:44px;text-align:right}
+.rat .plus{color:var(--crit)} .rat .minus{color:var(--ev)} .rat .base{color:var(--ink-2)}
+
+/* ---------- tables ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);position:sticky;top:0}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--line-2);vertical-align:top}
+.tbl tr.click{cursor:pointer} .tbl tr.click:hover td{background:var(--surface-2)}
+.tblwrap{overflow:auto;max-height:640px;border-radius:0 0 var(--radius) var(--radius)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+
+/* ---------- graph ---------- */
+.gwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}
+#net{height:calc(100vh - 260px);min-height:520px;border-radius:0 0 var(--radius) var(--radius);background:radial-gradient(circle at 1px 1px,#e7eaf2 1px,transparent 0) 0 0/22px 22px}
+.gside{padding:18px;max-height:calc(100vh - 200px);overflow:auto}
+
+/* ---------- report document ---------- */
+.doc{max-width:900px;margin:0 auto;padding:48px 56px}
+.doc h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.doc h2{font-size:17px;font-weight:700;margin:30px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.doc p,.doc li{color:var(--ink-2)}
+.doc .dmeta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0;padding:14px 16px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;font-size:12.5px}
+.doc .dmeta b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.doc .tbl td,.doc .tbl th{padding:8px 9px}
+.sign{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+.sign div{border:1px dashed var(--line);border-radius:10px;padding:16px;min-height:80px;font-size:12.5px;color:var(--muted)}
+
+/* ---------- approach ---------- */
+.arch{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;align-items:center;gap:10px}
+.abox{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)}
+.abox h4{font-size:13.5px;margin-bottom:6px} .abox li{font-size:12.5px;color:var(--ink-2)}
+.abox.ai{border-color:var(--ai-line);background:var(--ai-soft)}
+.abox.ev{border-color:var(--ev-line);background:var(--ev-soft)}
+.arrow{color:var(--faint);font-size:22px;text-align:center}
+.formula{font-family:var(--mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px;line-height:1.8}
+
+@media (max-width:1050px){.g3,.g-side,.g2,.md,.gwrap,.pipeline,.arch{grid-template-columns:1fr}.detail{position:static}.step{border-right:0;border-bottom:1px solid var(--line-2)}.arrow{transform:rotate(90deg)}}
+@media (max-width:640px){main{padding:18px 16px 60px}.topbar-inner{padding:12px 16px 0}.meta-chips{margin-left:0}.doc{padding:24px 18px}.dl,.aiq{grid-template-columns:1fr}.hero-stats{gap:18px}.doc .dmeta{grid-template-columns:1fr}}
+@media print{
+  .topbar,.noprint{display:none!important} body{background:#fff} main{padding:0;max-width:none}
+  section.view{display:none!important} section#v-report{display:block!important}
+  .card{box-shadow:none;border:0} .doc{padding:0}
+}
+</style>
+{% endraw %}
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brandrow">
+      <div class="logo"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.6-3.4 8.4-8 9-4.6-.6-8-4.4-8-9V6l8-3z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>
+      <div class="brandtxt"><b>Supply Chain Guardian</b><span>Know what you build. Trust what you ship.</span></div>
+      <div class="meta-chips" id="metaChips"></div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="findings">Findings <span class="count" id="cntF"></span></button>
+      <button class="tab" data-tab="changes">What Changed <span class="count" id="cntC"></span></button>
+      <button class="tab" data-tab="graph">Dependency Graph</button>
+      <button class="tab" data-tab="container">Container &amp; CI/CD</button>
+      <button class="tab" data-tab="sbom">SBOM &amp; Inventory</button>
+      <button class="tab" data-tab="report">Final Report</button>
+      <button class="tab" data-tab="approach">Our Approach</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="v-overview"></section>
+  <section class="view" id="v-findings"></section>
+  <section class="view" id="v-changes"></section>
+  <section class="view" id="v-graph"></section>
+  <section class="view" id="v-container"></section>
+  <section class="view" id="v-sbom"></section>
+  <section class="view" id="v-report"></section>
+  <section class="view" id="v-approach"></section>
+</main>
+
+<script id="report-data" type="application/json">{{ report|tojson }}</script>
+<script id="graph-data" type="application/json">{{ graph|tojson }}</script>
+<script>{{ vis_js|safe }}</script>
+{% raw %}
+<script>
+(() => {
+const R = JSON.parse(document.getElementById('report-data').textContent);
+const G = JSON.parse(document.getElementById('graph-data').textContent);
+const F = R.findings, CP = R.checkpoint, W = CP.what_is_in_the_app, CH = CP.what_changed || {}, RK = CP.what_looks_risky;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LV = ['Critical','High','Medium','Low','Info'];
+const LVC = {Critical:'var(--crit)',High:'var(--high)',Medium:'var(--med)',Low:'var(--low)',Info:'var(--info)'};
+const CAT = {'malicious-package':'Malicious package','vulnerability':'Known vulnerability','suspicious-change':'Suspicious change','container':'Container','ci-cd':'CI/CD','manifest-hygiene':'Manifest hygiene'};
+const aiOn = R.ai.mode === 'llm';
+const badge = f => `<span class="badge b-${f.risk_level}"><i class="dot"></i>${f.risk_level} · ${f.risk_score}</span>`;
+const scope = s => `<span class="chip scope-${esc(s)}">${esc(s)}</span>`;
+const pathHTML = p => `<div class="pathc">${p.map((n,i)=>`${i?'<span class="parr">›</span>':''}<span class="pnode ${i===0?'root':i===p.length-1?'leaf':''}">${esc(n)}</span>`).join('')}</div>`;
+const fmt = n => Number(n).toLocaleString();
+const newCount = F.filter(f=>f.changed).length;
+const aiFindings = F.filter(f=>f.ai);
+
+/* ---------- header ---------- */
+$('#metaChips').innerHTML = `
+  <span class="mchip"><i></i>${esc(R.target.name)}@${esc(R.target.version)}</span>
+  <span class="mchip ai"><i></i>${aiOn ? 'AI · ' + esc(R.ai.model) : 'AI · deterministic fallback'}</span>
+  <span class="mchip">${esc(new Date(R.generated_at).toLocaleString())}</span>`;
+$('#cntF').textContent = F.length; $('#cntC').textContent = newCount;
+
+/* ---------- router ---------- */
+const rendered = {};
+const views = {overview, findings, changes, graph, container, sbom, report, approach};
+function go(tab, arg){
+  if (!views[tab]) tab = 'overview';
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('section.view').forEach(v => v.classList.toggle('active', v.id === 'v-' + tab));
+  if (!rendered[tab]) { views[tab]($('#v-' + tab)); rendered[tab] = true; }
+  if (tab === 'findings' && arg) selectFinding(arg);
+  if (location.hash.slice(1).split('/')[0] !== tab) history.replaceState(null, '', '#' + tab);
+  window.scrollTo({top:0});
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.tab)));
+window.addEventListener('hashchange', () => { const [t,a] = location.hash.slice(1).split('/'); go(t, a && decodeURIComponent(a)); });
+const openFinding = id => go('findings', id);
+
+/* ---------- OVERVIEW ---------- */
+function overview(el){
+  const L = RK.by_risk_level, tot = Object.values(L).reduce((a,b)=>a+b,0);
+  const syft = R.sbom.syft_crosscheck || {};
+  const nonCve = F.filter(f=>!['vulnerability'].includes(f.category)).length;
+  const chList = [
+    ...(CH.added||[]).map(x=>['added',x]), ...(CH.integrity_changed||[]).map(x=>['integrity',x]),
+    ...(CH.source_changed||[]).map(x=>['source',x]), ...(CH.scripts_changed||[]).map(x=>['script',x]),
+    ...(CH.new_images||[]).map(x=>['image',x]), ...(CH.new_workflows||[]).map(x=>['workflow',x.split('/').pop()]),
+    ...(CH.version_changed||[]).map(x=>['version',x]), ...(CH.removed||[]).map(x=>['removed',x])];
+  const cats = Object.entries(RK.by_category).sort((a,b)=>b[1]-a[1]); const maxc = Math.max(...cats.map(c=>c[1]));
+  const fix = aiFindings.length ? aiFindings : F.slice(0,8);
+  el.innerHTML = `
+  <div class="hero">
+    <div>
+      <div class="tagline">Day 1 checkpoint · Guardian's Eyes</div>
+      <h1>${esc(R.target.name)} <span class="faint" style="font-weight:600">v${esc(R.target.version)}</span></h1>
+      <p>We mapped every component in the application, compared it against a trusted baseline, and ranked what looks risky. Each claim is backed by verified evidence; AI adds the explanation.</p>
+    </div>
+    <div class="hero-stats">
+      <div><b>${fmt(W.total_components)}</b><span>components</span></div>
+      <div><b style="color:var(--crit)">${newCount}</b><span>new risks</span></div>
+      <div><b>${fmt(F.length)}</b><span>findings</span></div>
+    </div>
+  </div>
+
+  <div class="grid g3">
+    <div class="card cp">
+      <div class="q"><span class="qi" style="background:var(--brand-soft);color:var(--brand)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 16V8l-9-5-9 5v8l9 5 9-5z"/><path d="M3.3 7L12 12l8.7-5M12 22V12"/></svg></span>What is in the application?</div>
+      <div class="big">${fmt(W.total_components)}</div>
+      <div class="bigsub">packages resolved from <code>package-lock.json</code> v${W.lockfile_version}</div>
+      <div class="kv">
+        <div><b>${W.direct}</b><span>direct</span></div><div><b>${fmt(W.transitive)}</b><span>transitive</span></div><div><b>${W.max_depth}</b><span>max depth</span></div>
+        <div><b>${W.runtime}</b><span>in prod image</span></div><div><b>${fmt(W.dev_only)}</b><span>dev / test</span></div><div><b>${W.with_install_scripts}</b><span>install scripts</span></div>
+      </div>
+      <div class="small muted" style="margin-top:12px">CycloneDX 1.5 SBOM${syft.npm_components ? ` · Syft cross-check <b style="color:var(--ev)">${syft.npm_components} vs ${syft.guardian_runtime_unique} ✓</b>` : ''}</div>
+    </div>
+    <div class="card cp">
+      <div class="q"><span class="qi" style="background:var(--crit-soft);color:var(--crit)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg></span>What changed?</div>
+      <div class="big" style="color:var(--crit)">${newCount}</div>
+      <div class="bigsub">findings that exist only in the current version</div>
+      <ul class="clean changes">${chList.slice(0,6).map(([k,v])=>`<li><span class="k">${k}</span><span class="mono" style="font-size:12px">${esc(v)}</span></li>`).join('')}</ul>
+      ${chList.length>6?`<a class="small" href="#changes">+ ${chList.length-6} more changes →</a>`:''}
+    </div>
+    <div class="card cp">
+      <div class="q"><span class="qi" style="background:var(--high-soft);color:var(--high)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.3 3.9L1.8 18a2 2 0 001.7 3h17a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>What appears risky?</div>
+      <div class="big">${L.Critical}<span style="font-size:15px;color:var(--muted);font-weight:600"> critical</span></div>
+      <div class="bigsub">${L.High} high · ${L.Medium} medium · ${L.Low + L.Info} low/info</div>
+      <div class="stack">${LV.map(l=>L[l]?`<div style="width:${100*L[l]/tot}%;background:${LVC[l]}" title="${l}: ${L[l]}"></div>`:'').join('')}</div>
+      <div class="legend">${LV.map(l=>`<span><i class="sw" style="background:${LVC[l]}"></i>${l} ${L[l]}</span>`).join('')}</div>
+      <div class="small muted" style="margin-top:12px">${R.vulnerability_scan.advisories} advisories from OSV.dev · ${nonCve} non-CVE supply-chain findings</div>
+    </div>
+  </div>
+
+  <div class="card pipeline">
+    ${[['Discover','Manifests & lockfile parsed',fmt(W.total_components),'components'],
+       ['SBOM & Graph','CycloneDX + dependency paths',fmt(W.edges),'dependency edges'],
+       ['Detect','CVEs, malware & anomalies',fmt(F.length),'verified findings'],
+       ['Analyze with AI','Explain & justify top risks',R.ai.sent_findings,aiOn?'findings · '+R.ai.model:'findings · fallback'],
+       ['Report','Human + machine readable','2','formats (HTML · JSON)']]
+      .map((s,i)=>`<div class="step ${i===3?'ai':''}"><div class="n">${i+1}</div><h4>${s[0]}</h4><p>${s[1]}</p><div class="m">${s[2]}</div><div class="ml">${esc(s[3])}</div></div>`).join('')}
+  </div>
+
+  <div class="grid g-side">
+    <div class="grid">
+      ${R.ai.executive_summary ? `<div class="aibox"><div class="lbl">✦ AI summary · ${esc(R.ai.model)}</div><p>${esc(R.ai.executive_summary)}</p>
+        ${R.ai.prioritisation_rationale?`<div class="lbl" style="margin-top:14px">✦ Why this order</div><p>${esc(R.ai.prioritisation_rationale)}</p>`:''}
+        <div class="xs muted">Generated only from the verified evidence. It never changes scores.</div></div>` : ''}
+      <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Findings by category</div>
+        <div class="catbars">${cats.map(([c,n])=>`<div class="row"><span>${CAT[c]||c}</span><div class="tr"><div style="width:${100*n/maxc}%"></div></div><b>${n}</b></div>`).join('')}</div></div>
+    </div>
+    <div class="card pad">
+      <div class="eyebrow" style="margin-bottom:6px">Fix first</div>
+      <ul class="clean fixfirst">${fix.slice(0,8).map((f,i)=>`<li data-id="${esc(f.id)}"><span class="rank">${i+1}</span>
+        <div style="flex:1;min-width:0"><div class="t">${esc(f.title)}</div><div class="s mono">${esc(f.component)}</div></div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${badge(f)}${f.changed?'<span class="chip new">NEW</span>':''}</div></li>`).join('')}</ul>
+    </div>
+  </div>`;
+  el.querySelectorAll('.fixfirst li').forEach(li => li.onclick = () => openFinding(li.dataset.id));
+}
+
+/* ---------- FINDINGS ---------- */
+let fState = {q:'', lvl:'', cat:'', scope:'', ai: aiFindings.length>0, nw:false}, selId = null;
+function findings(el){
+  el.innerHTML = `
+  <div class="vhead"><div><h2>Findings</h2><p>Each finding pairs <b style="color:var(--ev)">verified evidence</b> from scanners, diffs and rules with <b style="color:var(--ai)">AI reasoning</b> that explains it. Select one to see its dependency path, score breakdown and explanation.</p></div></div>
+  <div class="md">
+    <div class="card" style="overflow:hidden">
+      <div class="filters">
+        <input class="search" id="fq" placeholder="Search package, advisory ID, title…">
+        <select class="sel" id="fl"><option value="">All levels</option>${LV.map(l=>`<option>${l}</option>`).join('')}</select>
+        <select class="sel" id="fc"><option value="">All categories</option>${Object.keys(RK.by_category).map(c=>`<option value="${c}">${CAT[c]||c}</option>`).join('')}</select>
+        <select class="sel" id="fs"><option value="">All scopes</option>${['runtime','dev','build','ci'].map(s=>`<option>${s}</option>`).join('')}</select>
+        <div class="toggles"><button class="tg" id="tgAi">✦ AI-analysed</button><button class="tg" id="tgNew">New vs baseline</button></div>
+      </div>
+      <div class="lcount" id="lcount"></div>
+      <div class="flist" id="flist"></div>
+    </div>
+    <div class="card detail" id="fdetail"><div class="empty">Select a finding</div></div>
+  </div>`;
+  const upd = () => { fState.q=$('#fq').value.toLowerCase(); fState.lvl=$('#fl').value; fState.cat=$('#fc').value; fState.scope=$('#fs').value; renderList(); };
+  ['#fq','#fl','#fc','#fs'].forEach(s => $(s).addEventListener('input', upd));
+  $('#tgAi').onclick = () => { fState.ai=!fState.ai; renderList(); };
+  $('#tgNew').onclick = () => { fState.nw=!fState.nw; renderList(); };
+  renderList();
+  if (!selId) selectFinding((fState.ai ? aiFindings[0] : F[0])?.id);
+}
+function filtered(){
+  const s = fState;
+  return F.filter(f => (!s.lvl||f.risk_level===s.lvl) && (!s.cat||f.category===s.cat) && (!s.scope||f.scope===s.scope)
+    && (!s.ai||f.ai) && (!s.nw||f.changed)
+    && (!s.q || (f.component+' '+f.title+' '+f.id+' '+f.vuln_ids.join(' ')).toLowerCase().includes(s.q)));
+}
+function renderList(){
+  $('#tgAi').classList.toggle('on', fState.ai); $('#tgNew').classList.toggle('on', fState.nw);
+  const rows = filtered();
+  $('#lcount').textContent = `${rows.length} of ${F.length} findings`;
+  $('#flist').innerHTML = rows.slice(0,400).map(f=>`<div class="fitem ${f.id===selId?'sel':''}" data-id="${esc(f.id)}">
+    <div class="top">${badge(f)}${f.changed?'<span class="chip new">NEW</span>':''}${f.ai&&aiOn?'<span class="chip aich">✦ AI</span>':''}<span class="chip">${CAT[f.category]||f.category}</span></div>
+    <div class="t">${esc(f.title)}</div><div class="c">${esc(f.component)}</div></div>`).join('') || '<div class="empty">No findings match these filters.</div>';
+  $('#flist').querySelectorAll('.fitem').forEach(d => d.onclick = () => selectFinding(d.dataset.id));
+}
+function gauge(score){ const c = score>=80?'var(--crit)':score>=60?'var(--high)':score>=35?'var(--med)':'var(--low)';
+  return `<div class="gauge" style="background:conic-gradient(${c} ${score*3.6}deg,var(--line-2) 0)"><span style="color:${c}">${score}</span></div>`; }
+function rationale(list){ return list.map(r => { const m = r.match(/^([+-]\d+)\s+(.*)$/);
+  if (m) return `<div><span class="d ${m[1][0]==='+'?'plus':'minus'}">${m[1]}</span><span>${esc(m[2])}</span></div>`;
+  const b = r.match(/^base (\d+)\s+(.*)$/); if (b) return `<div><span class="d base">${b[1]}</span><span>base ${esc(b[2])}</span></div>`;
+  return `<div><span class="d base">•</span><span>${esc(r)}</span></div>`; }).join(''); }
+function selectFinding(id){
+  const f = F.find(x=>x.id===id); if (!f || !$('#fdetail')) return;
+  selId = id;
+  document.querySelectorAll('.fitem').forEach(d => d.classList.toggle('sel', d.dataset.id===id));
+  const a = f.ai, isLLM = a && a.source && a.source.startsWith('AI inference');
+  $('#fdetail').innerHTML = `
+    <div class="dhead">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${badge(f)}${f.changed?'<span class="chip new">NEW vs baseline</span>':''}<span class="chip">${CAT[f.category]||f.category}</span>${scope(f.scope)}</div>
+      <h3>${esc(f.title)}</h3>
+      <div class="small muted mono">${esc(f.location)}${f.vuln_ids.length?' · '+esc(f.vuln_ids.slice(0,4).join(', ')):''}</div>
+    </div>
+    <div class="dbody">
+      <dl class="dl">
+        <dt>Component</dt><dd><code>${esc(f.component)}</code></dd>
+        ${f.dependency_paths.length?`<dt>Dependency path${f.dependency_paths.length>1?'s':''}</dt><dd>${f.dependency_paths.slice(0,3).map(pathHTML).join('')}</dd>`:''}
+        ${f.cvss!=null?`<dt>CVSS</dt><dd>${f.cvss}</dd>`:''}
+        ${f.fixed_version?`<dt>Fixed in</dt><dd><code>${esc(f.fixed_version)}</code></dd>`:''}
+        <dt>Confidence</dt><dd>${esc(f.confidence)} <span class="muted small">(evidence quality)</span></dd>
+      </dl>
+      <div><div class="sec-t" style="color:var(--ink-2)">Initial risk: how the score was built</div>
+        <div class="score">${gauge(f.risk_score)}<div class="rat">${rationale(f.risk_rationale)}</div></div></div>
+      <div class="evbox"><div class="sec-t">✔ Verified evidence</div>
+        <ul class="clean">${f.evidence.map(e=>`<li><span class="src">${esc(e.source)}</span>${esc(e.detail)}</li>`).join('')}</ul>
+        ${f.references.length?`<div class="xs" style="margin-top:8px">${f.references.map(u=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https?:\/\//,'').slice(0,60))}</a>`).join(' · ')}</div>`:''}
+      </div>
+      ${a ? `<div class="aiblk"><div class="sec-t">✦ ${isLLM?'AI reasoning · '+esc(R.ai.model):'Explanation · deterministic template (LLM unavailable)'}${a.ai_confidence&&a.ai_confidence!=='n/a'?` · model confidence ${esc(a.ai_confidence)}`:''}</div>
+        <dl class="aiq">
+          <dt>What it means</dt><dd>${esc(a.explanation)}</dd>
+          <dt>Why it matters here</dt><dd>${esc(a.why_it_matters)}</dd>
+          ${a.risk_reasoning?`<dt>Risk reasoning</dt><dd>${esc(a.risk_reasoning)}</dd>`:''}
+          <dt>Attack scenario</dt><dd>${esc(a.likely_attack_scenario)}</dd>
+          <dt>Next step (Day 2)</dt><dd>${esc(a.suggested_next_step)} <span class="muted small">· requires human approval</span></dd>
+          ${a.evidence_used&&a.evidence_used.length?`<dt>Evidence relied on</dt><dd>${a.evidence_used.map(s=>`<span class="chip">${esc(s)}</span>`).join(' ')}</dd>`:''}
+        </dl>
+        ${isLLM?`<div class="guard"><span>Guardrails:</span><span><b>✔</b> ${a.unverified_ids_removed.length} invented advisory IDs</span><span><b>✔</b> ${(a.evidence_claims_rejected||[]).length} unsupported evidence claims</span><span><b>✔</b> score untouched by AI</span></div>`:''}
+      </div>` : `<div class="small muted">Not in the top ${R.ai.sent_findings} sent to the AI (free-tier budget). The deterministic evidence and score above are complete.</div>`}
+    </div>`;
+}
+
+/* ---------- WHAT CHANGED ---------- */
+function changes(el){
+  const nf = F.filter(f=>f.changed);
+  const groups = [['Added packages',CH.added,'var(--crit)'],['Integrity changed',CH.integrity_changed,'var(--crit)'],['Source changed',CH.source_changed,'var(--high)'],
+                  ['Scripts changed',CH.scripts_changed,'var(--high)'],['New base images',CH.new_images,'var(--high)'],['New CI workflows',CH.new_workflows,'var(--high)'],
+                  ['Version changes',CH.version_changed,'var(--low)'],['Removed packages',CH.removed,'var(--info)']];
+  const integ = F.filter(f=>f.id.startsWith('DIFF-INT-'));
+  el.innerHTML = `
+  <div class="vhead"><div><h2>What changed</h2><p>The current tree is compared position by position with a trusted baseline: lockfile entries, hashes, download sources, lifecycle scripts, Dockerfile and CI workflows.</p></div></div>
+  <div class="grid g3" style="margin-bottom:16px">${groups.filter(g=>(g[1]||[]).length).map(([t,l,c])=>`
+    <div class="card pad"><div style="display:flex;justify-content:space-between;align-items:center"><span class="eyebrow">${t}</span><b style="font-size:20px;color:${c}">${l.length}</b></div>
+    <ul class="clean changes" style="margin-top:8px">${l.map(x=>`<li><span class="mono" style="font-size:12px">${esc(x)}</span></li>`).join('')}</ul></div>`).join('')}</div>
+  ${integ.map(f=>{const d=f.evidence[0].data;return `<div class="card pad" style="margin-bottom:16px"><div class="eyebrow" style="color:var(--crit)">Tamper evidence · ${esc(f.component)}</div>
+    <div class="grid g2" style="margin-top:10px">
+      <div><div class="small muted">Baseline (trusted)</div><div class="mono small">${esc(d.baseline_resolved)}</div><code>${esc(d.baseline_integrity)}</code></div>
+      <div><div class="small muted">Current</div><div class="mono small" style="color:var(--crit)">${esc(d.current_resolved)}</div><code style="color:var(--crit)">${esc(d.current_integrity)}</code></div>
+    </div><div class="small" style="margin-top:8px">${esc(f.evidence[0].detail)}</div></div>`}).join('')}
+  <div class="card"><div class="toolbar"><b>${nf.length} findings introduced by this change</b><span class="muted small">click a row for full evidence</span></div>
+  <div class="tblwrap"><table class="tbl"><thead><tr><th>Risk</th><th>Finding</th><th>Component</th><th>Scope</th><th>Evidence</th></tr></thead><tbody>
+  ${nf.map(f=>`<tr class="click" data-id="${esc(f.id)}"><td>${badge(f)}</td><td>${esc(f.title)}</td><td class="mono small">${esc(f.component)}</td><td>${scope(f.scope)}</td><td class="small muted">${esc([...new Set(f.evidence.map(e=>e.source))].join(', '))}</td></tr>`).join('')}
+  </tbody></table></div></div>`;
+  el.querySelectorAll('tr.click').forEach(r => r.onclick = () => openFinding(r.dataset.id));
+}
+
+/* ---------- GRAPH ---------- */
+function graph(el){
+  const labels = G.nodes.map(n=>n.label).sort();
+  el.innerHTML = `
+  <div class="vhead"><div><h2>Dependency graph</h2><p>The app's direct dependencies, plus the shortest path to every high-risk or newly introduced component. Click a node to see why it is there; search to trace a package back to the app.</p></div></div>
+  <div class="gwrap">
+    <div class="card">
+      <div class="toolbar">
+        <input class="search" id="gq" list="glabels" placeholder="Find a package, e.g. flatmap-stream" style="flex:1;min-width:220px">
+        <datalist id="glabels">${labels.map(l=>`<option value="${esc(l)}">`).join('')}</datalist>
+        <button class="btn" id="gfit">Fit view</button>
+        <div class="legend"><span><i class="sw" style="background:var(--brand)"></i>app</span><span><i class="sw" style="background:#475569"></i>direct</span><span><i class="sw" style="background:#cbd5e1"></i>transitive</span><span><i class="sw" style="background:var(--crit)"></i>flagged</span><span><i class="sw" style="border:1.5px dashed #94a3b8;background:#fff"></i>dev-only</span></div>
+      </div>
+      <div id="net"></div>
+    </div>
+    <div class="card gside" id="gside"><div class="eyebrow">Node details</div><p class="muted small">Click a node in the graph. Flagged nodes are red; their findings appear here.</p>
+      <div class="eyebrow" style="margin-top:18px">In this view</div>
+      <div class="kv" style="border:0;padding:0;margin-top:8px"><div><b>${G.nodes.length}</b><span>nodes</span></div><div><b>${G.edges.length}</b><span>edges</span></div><div><b>${G.nodes.filter(n=>n.flagged).length}</b><span>flagged</span></div></div></div>
+  </div>`;
+  if (typeof vis === 'undefined') { $('#net').innerHTML = '<div class="empty">Graph library unavailable.</div>'; return; }
+  const css = getComputedStyle(document.documentElement), v = n => css.getPropertyValue(n).trim();
+  const nodes = new vis.DataSet(G.nodes.map(n => ({
+    id: n.id === '' ? '__root__' : n.id, label: n.label, raw: n,
+    shape: n.root ? 'box' : 'dot', size: n.root ? 22 : n.flagged ? 11 : n.direct ? 10 : 6,
+    margin: n.root ? 10 : undefined,
+    color: { background: n.root ? v('--brand') : n.flagged ? v('--crit') : n.direct ? '#475569' : '#cbd5e1',
+             border: n.dev ? '#94a3b8' : (n.flagged ? v('--crit') : n.root ? v('--brand') : '#ffffff'),
+             highlight: { background: v('--brand-2'), border: v('--brand') } },
+    borderWidth: n.dev ? 1.5 : 2, shapeProperties: { borderDashes: n.dev ? [3,3] : false },
+    font: { face: 'Inter', size: n.root ? 14 : (n.flagged || n.direct) ? 12 : 9, color: n.root ? '#fff' : (n.flagged ? v('--crit') : '#334155'), strokeWidth: n.root ? 0 : 3, strokeColor: '#fff' }
+  })));
+  const edges = new vis.DataSet(G.edges.map((e,i) => ({ id:i, from: e.from===''?'__root__':e.from, to: e.to, arrows:{to:{enabled:true,scaleFactor:.45}}, color:{color:'#d5dbe5',highlight:v('--brand')}, width: 1 })));
+  const net = new vis.Network($('#net'), {nodes, edges}, {
+    physics: { solver:'forceAtlas2Based', forceAtlas2Based:{gravitationalConstant:-45, springLength:80}, stabilization:{iterations:300} },
+    interaction: { hover:true, tooltipDelay:120 }, layout: { improvedLayout: true } });
+  net.once('stabilizationIterationsDone', () => net.setOptions({ physics: false }));
+  const parentsOf = id => G.edges.filter(e => e.to === id).map(e => e.from);
+  function pathTo(id){ const p=[id]; let cur=id, guard=0; while(cur!=='' && guard++<40){ const ps=parentsOf(cur); if(!ps.length) break; cur=ps.includes('')?'':ps[0]; p.unshift(cur);} return p; }
+  function showNode(id){
+    const raw = id==='__root__' ? '' : id; const n = G.nodes.find(x=>x.id===raw); if (!n) return;
+    const inv = (R.inventory||[]).find(c=>c.lock_path===raw);
+    const fs = F.filter(f=>f.component===n.label);
+    const p = pathTo(raw); const ids = p.map(x=>x===''?'__root__':x);
+    net.selectNodes(ids); net.focus(ids[ids.length-1], {scale:1.1, animation:{duration:500}});
+    $('#gside').innerHTML = `<div class="eyebrow">Node details</div><h3 style="font-size:16px;margin:8px 0 4px" class="mono">${esc(n.label)}</h3>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${n.root?'<span class="chip">application</span>':n.direct?'<span class="chip">direct</span>':'<span class="chip">transitive</span>'}${n.root?'':scope(n.dev?'dev':'runtime')}${inv&&inv.install_script?'<span class="chip" style="color:var(--crit)">install script</span>':''}</div>
+      ${inv?`<dl class="dl" style="grid-template-columns:90px 1fr;font-size:12.5px"><dt>Source</dt><dd class="mono">${esc(inv.source)}</dd><dt>Depth</dt><dd>${inv.depth}</dd><dt>Required by</dt><dd>${inv.parents} package(s)</dd></dl>`:''}
+      <div class="eyebrow" style="margin:14px 0 6px">Path from the app</div>${pathHTML(p.map(x=>G.nodes.find(y=>y.id===x)?.label||x))}
+      <div class="eyebrow" style="margin:14px 0 6px">Findings (${fs.length})</div>
+      ${fs.length?`<ul class="clean">${fs.slice(0,12).map(f=>`<li style="padding:7px 0;border-bottom:1px solid var(--line-2);cursor:pointer" data-id="${esc(f.id)}">${badge(f)} <span class="small">${esc(f.title)}</span></li>`).join('')}</ul>`:'<div class="small muted">No findings for this component.</div>'}`;
+    $('#gside').querySelectorAll('li[data-id]').forEach(li => li.onclick = () => openFinding(li.dataset.id));
+  }
+  net.on('click', e => e.nodes.length && showNode(e.nodes[0]));
+  $('#gq').addEventListener('change', e => { const n = G.nodes.find(x=>x.label===e.target.value); if (n) showNode(n.id===''?'__root__':n.id); });
+  $('#gfit').onclick = () => net.fit({animation:{duration:400}});
+}
+
+/* ---------- CONTAINER & CI ---------- */
+function container(el){
+  const img = F.filter(f=>f.id.startsWith('IMAGE-'));
+  const df = F.filter(f=>f.category==='container' && !f.id.startsWith('IMAGE-'));
+  const ci = F.filter(f=>f.category==='ci-cd');
+  const byWf = {}; ci.forEach(f => (byWf[f.component] = byWf[f.component] || []).push(f));
+  const row = f => `<tr class="click" data-id="${esc(f.id)}"><td>${badge(f)}</td><td>${f.changed?'<span class="chip new">NEW</span> ':''}${esc(f.title)}<div class="xs muted mono">${esc(f.location)}</div></td></tr>`;
+  el.innerHTML = `
+  <div class="vhead"><div><h2>Container &amp; CI/CD</h2><p>The build pipeline is part of the supply chain. We statically check the Dockerfile and GitHub Actions, and scan the real base image with Trivy, with no Docker daemon needed.</p></div></div>
+  ${img.map(f=>{const d=f.evidence[0].data||{}, c=d.counts||{}, os=d.os||{}; return `
+  <div class="card pad" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center">
+      <div><div class="eyebrow">Base image scan · Trivy</div><h3 class="mono" style="font-size:18px;margin-top:4px">${esc(f.component)}</h3>
+      <div class="small muted">${esc(os.Family||'')} ${esc(os.Name||'')}${os.EOSL?' · <b style="color:var(--crit)">OS end-of-support</b>':''}</div></div>
+      <div class="hero-stats">${['CRITICAL','HIGH','MEDIUM','LOW'].map(s=>`<div><b style="color:${LVC[s[0]+s.slice(1).toLowerCase()]}">${c[s]||0}</b><span>${s.toLowerCase()}</span></div>`).join('')}</div>
+    </div>
+    ${(d.top||[]).length?`<div class="tblwrap" style="margin-top:14px;max-height:320px;border:1px solid var(--line);border-radius:10px"><table class="tbl"><thead><tr><th>Advisory</th><th>Package</th><th>Installed</th><th>Fixed</th><th>Layer</th></tr></thead><tbody>
+      ${d.top.map(t=>`<tr><td><span class="badge b-${t.severity==='CRITICAL'?'Critical':'High'}">${esc(t.id)}</span></td><td class="mono small">${esc(t.pkg)}</td><td class="mono small">${esc(t.installed)}</td><td class="mono small">${esc(t.fixed||'-')}</td><td class="small muted">${esc(t.target)}</td></tr>`).join('')}
+    </tbody></table></div>`:''}
+  </div>`}).join('')}
+  <div class="grid g2">
+    <div class="card"><div class="toolbar"><b>Dockerfile</b><span class="chip">${df.length} findings</span></div>
+      <table class="tbl"><tbody>${df.map(row).join('')}</tbody></table></div>
+    <div class="card"><div class="toolbar"><b>GitHub Actions workflows</b><span class="chip">${ci.length} findings</span></div>
+      ${Object.entries(byWf).map(([wf,l])=>`<div style="padding:10px 12px 0" class="eyebrow mono">${esc(wf.split('/').pop())}</div><table class="tbl"><tbody>${l.map(row).join('')}</tbody></table>`).join('')}</div>
+  </div>`;
+  el.querySelectorAll('tr.click').forEach(r => r.onclick = () => openFinding(r.dataset.id));
+}
+
+/* ---------- SBOM ---------- */
+function sbom(el){
+  const inv = R.inventory || []; const byLabel = {}; F.forEach(f => byLabel[f.component] = (byLabel[f.component]||0)+1);
+  const syft = R.sbom.syft_crosscheck || {};
+  el.innerHTML = `
+  <div class="vhead"><div><h2>SBOM &amp; inventory</h2><p>Every installed package with its scope, depth and download source, exported as a CycloneDX 1.5 SBOM including the dependency relationships.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="sbom.cdx.json" download>⬇ SBOM (CycloneDX)</a>${R.baseline?'<a class="btn" href="sbom.baseline.cdx.json" download>⬇ Baseline SBOM</a>':''}<a class="btn" href="guardian_report.json" download>⬇ Report JSON</a></div></div>
+  <div class="grid g3" style="margin-bottom:16px;grid-template-columns:repeat(4,minmax(0,1fr))">
+    ${[['Components',fmt(W.total_components)],['Unique name@version',fmt(W.unique_name_versions)],['Production packages',W.runtime_unique_name_versions||W.runtime],['Syft cross-check',syft.npm_components?`${syft.npm_components} <span class="small" style="color:var(--ev)">✓ matches</span>`:'not run']]
+      .map(([k,v])=>`<div class="card pad"><div class="eyebrow">${k}</div><div style="font-size:24px;font-weight:800;margin-top:6px">${v}</div></div>`).join('')}
+  </div>
+  <div class="card"><div class="toolbar"><input class="search" id="sq" placeholder="Filter packages…" style="flex:1;min-width:200px">
+    <select class="sel" id="ss"><option value="">All scopes</option><option>runtime</option><option>dev</option></select>
+    <select class="sel" id="sd"><option value="">Direct + transitive</option><option value="1">Direct only</option></select>
+    <label class="small"><input type="checkbox" id="sf"> with findings</label><span class="small muted" id="scount"></span></div>
+  <div class="tblwrap"><table class="tbl"><thead><tr><th>Package</th><th>Version</th><th>Type</th><th>Scope</th><th>Depth</th><th>Source</th><th>Findings</th></tr></thead><tbody id="sbody"></tbody></table></div></div>`;
+  const draw = () => { const q=$('#sq').value.toLowerCase(), s=$('#ss').value, d=$('#sd').value, wf=$('#sf').checked;
+    const rows = inv.filter(c => (!q||c.label.toLowerCase().includes(q)) && (!s||c.scope===s) && (!d||c.direct) && (!wf||byLabel[c.label]));
+    $('#scount').textContent = `${rows.length} packages`;
+    $('#sbody').innerHTML = rows.slice(0,300).map(c=>`<tr><td class="mono small"><b>${esc(c.name)}</b></td><td class="mono small">${esc(c.version)}</td><td>${c.direct?'<span class="chip">direct</span>':'<span class="small muted">transitive</span>'}</td><td>${scope(c.scope)}</td><td>${c.depth}</td>
+      <td class="mono xs ${c.source!=='registry.npmjs.org'?'':'muted'}" style="${c.source!=='registry.npmjs.org'?'color:var(--crit)':''}">${esc(c.source)}</td><td>${byLabel[c.label]?`<span class="badge b-High">${byLabel[c.label]}</span>`:''}</td></tr>`).join('')
+      + (rows.length>300?`<tr><td colspan="7" class="small muted">Showing 300 of ${rows.length}. Refine the filter.</td></tr>`:''); };
+  ['#sq','#ss','#sd','#sf'].forEach(s => $(s).addEventListener('input', draw)); draw();
+}
+
+/* ---------- FINAL REPORT ---------- */
+function report(el){
+  const L = RK.by_risk_level, top = F.slice(0,15);
+  const gen = new Date(R.generated_at);
+  el.innerHTML = `
+  <div class="noprint" style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+    <button class="btn" id="dlj">⬇ Download JSON</button><button class="btn primary" onclick="window.print()">Print / Save as PDF</button></div>
+  <article class="card doc">
+    <div class="eyebrow" style="color:var(--brand)">Guardian Report · Day 1 · Detection & Evidence</div>
+    <h1 style="margin-top:6px">Supply-chain assessment of ${esc(R.target.name)}@${esc(R.target.version)}</h1>
+    <div class="dmeta">
+      <div><b>Prepared by</b>${esc(R.tool.team)}</div><div><b>Date</b>${gen.toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}</div><div><b>Tool</b>Supply Chain Guardian v${esc(R.tool.version)}</div>
+      <div><b>Target</b>${esc(R.target.upstream)}</div><div><b>Compared with</b>${R.baseline?'trusted baseline copy':'no baseline'}</div><div><b>AI model</b>${aiOn?esc(R.ai.model):'not used (fallback)'}</div>
+    </div>
+
+    <h2>1. Executive summary</h2>
+    <p>${R.ai.executive_summary?esc(R.ai.executive_summary):`The application contains ${W.total_components} components. ${newCount} findings were introduced compared with the baseline, and ${L.Critical} findings are rated critical.`}</p>
+    ${R.ai.executive_summary?'<p class="xs muted">Summary drafted by AI from verified evidence; figures below are tool-generated.</p>':''}
+
+    <h2>2. Key figures</h2>
+    <table class="tbl"><tbody>
+      <tr><td>Components (direct / transitive)</td><td><b>${fmt(W.total_components)}</b> (${W.direct} / ${fmt(W.transitive)})</td></tr>
+      <tr><td>Shipped in production image</td><td><b>${W.runtime}</b> package instances</td></tr>
+      <tr><td>Known advisories (OSV.dev)</td><td><b>${R.vulnerability_scan.advisories}</b> on ${R.vulnerability_scan.vulnerable_packages} package versions</td></tr>
+      <tr><td>Findings by initial risk</td><td>${LV.map(l=>`<span class="badge b-${l}" style="margin-right:4px">${l} ${L[l]}</span>`).join('')}</td></tr>
+      <tr><td>Introduced since baseline</td><td><b style="color:var(--crit)">${newCount}</b> findings</td></tr>
+      <tr><td>Container base image(s)</td><td class="mono small">${[...new Set(W.container_images)].join(', ')}</td></tr>
+      <tr><td>CI workflows inspected</td><td class="mono small">${W.ci_workflows.map(w=>w.split('/').pop()).join(', ')}</td></tr>
+    </tbody></table>
+
+    <h2>3. What changed</h2>
+    <ul>${[...(CH.added||[]).map(x=>`New package <code>${esc(x)}</code>`),...(CH.integrity_changed||[]).map(x=>`Integrity hash changed for <code>${esc(x)}</code> (same version)`),
+      ...(CH.source_changed||[]).map(x=>`Download source changed: <code>${esc(x)}</code>`),...(CH.scripts_changed||[]).map(x=>`Changed: ${esc(x)}`),
+      ...(CH.new_images||[]).map(x=>`New base image <code>${esc(x)}</code>`),...(CH.new_workflows||[]).map(x=>`New workflow <code>${esc(x)}</code>`)].map(x=>`<li>${x}</li>`).join('')}</ul>
+
+    <h2>4. Prioritised findings</h2>
+    <table class="tbl"><thead><tr><th>#</th><th>Risk</th><th>Finding</th><th>Component</th><th>Scope</th><th>Evidence</th></tr></thead><tbody>
+      ${top.map((f,i)=>`<tr><td>${i+1}</td><td>${badge(f)}</td><td>${f.changed?'<span class="chip new">NEW</span> ':''}${esc(f.title)}</td><td class="mono xs">${esc(f.component)}</td><td>${esc(f.scope)}</td><td class="xs">${esc([...new Set(f.evidence.map(e=>e.source))].join(', '))}</td></tr>`).join('')}
+    </tbody></table>
+    ${R.ai.prioritisation_rationale?`<p style="margin-top:10px"><b>Prioritisation rationale (AI):</b> ${esc(R.ai.prioritisation_rationale)}</p>`:''}
+
+    <h2>5. Analysed findings: evidence and reasoning</h2>
+    ${aiFindings.map((f,i)=>`<div style="margin:0 0 16px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;break-inside:avoid">
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b>${i+1}. ${esc(f.title)}</b>${badge(f)}</div>
+      <div class="xs muted mono" style="margin:3px 0 8px">${esc(f.component)} · ${esc(f.location)}</div>
+      ${f.dependency_paths.length?pathHTML(f.dependency_paths[0]):''}
+      <p class="small" style="margin:6px 0"><b style="color:var(--ev)">Evidence:</b> ${f.evidence.map(e=>`[${esc(e.source)}] ${esc(e.detail)}`).join(' ')}</p>
+      <p class="small" style="margin:6px 0"><b style="color:var(--ai)">Reasoning:</b> ${esc(f.ai.risk_reasoning||f.ai.why_it_matters)}</p>
+      <p class="small" style="margin:6px 0"><b>Recommended next step:</b> ${esc(f.ai.suggested_next_step)}</p></div>`).join('')}
+
+    <h2>6. Method</h2>
+    <p>Components were resolved from the npm lockfile with Node's module-resolution rules and exported as CycloneDX 1.5 (cross-checked with Syft). Vulnerabilities and known malware come from OSV.dev; the container base image was scanned with Trivy. Non-CVE risks were detected by typosquat analysis (edit distance and npm download statistics), lockfile integrity and source checks, a baseline diff, and Dockerfile and GitHub Actions rules. Initial risk is a deterministic score; its rationale is recorded per finding.</p>
+
+    <h2>7. Responsible AI statement</h2>
+    <p>AI (${aiOn?esc(R.ai.model):'not used in this run'}) was used only to explain and justify the top ${R.ai.sent_findings} findings and to draft the summary. It received evidence only, with no source code or secrets. Advisory IDs not present in the evidence are removed automatically, and claimed evidence sources are checked against the finding. AI output never changes risk scores, files or dependencies. All remediation requires human approval.</p>
+
+    <h2>8. Limitations and residual risk</h2>
+    <ul><li>Reachability (whether vulnerable code is actually called) is not yet analysed, so scores may overstate some transitive vulnerabilities.</li>
+      <li>Only the npm ecosystem is covered in this version. Floating images (<code>:latest</code>) are flagged but not scanned.</li>
+      <li>Typosquat detection relies on a curated reference list and public download statistics.</li></ul>
+
+    <h2>9. Review and approval (Day 2)</h2>
+    <div class="sign"><div>Security reviewer<br><br>Name / date / decision</div><div>Application owner<br><br>Name / date / decision</div></div>
+  </article>`;
+  $('#dlj').onclick = () => { const b = new Blob([JSON.stringify(R,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='guardian_report.json'; a.click(); };
+}
+
+/* ---------- APPROACH ---------- */
+function approach(el){
+  el.innerHTML = `
+  <div class="vhead"><div><h2>Our approach</h2><p>Agents with one job each. Deterministic tools establish the facts; the LLM explains them. Nothing is installed, executed or changed without a human.</p></div></div>
+  <div class="card pad" style="margin-bottom:16px">
+    <div class="arch">
+      <div class="abox"><h4>Inputs</h4><ul class="clean"><li>package.json · package-lock.json</li><li>Dockerfile</li><li>.github/workflows/*</li><li>Trusted baseline copy</li></ul></div>
+      <div class="arrow">→</div>
+      <div class="abox ev"><h4>Deterministic agents (verified evidence)</h4><ul class="clean"><li>① Discovery: components and edges</li><li>② SBOM + graph: CycloneDX, paths</li><li>③ Vulnerabilities: OSV.dev, Trivy</li><li>④ Anomalies: typosquat, scripts, integrity, diff, Docker/CI rules</li><li>Risk scorer: explainable 0–100</li></ul></div>
+      <div class="arrow">→</div>
+      <div class="abox ai"><h4>AI explainer (inference)</h4><ul class="clean"><li>Top-N findings only, 1 cached call</li><li>Explain · justify risk · next step</li><li>Guardrails: ID + evidence check</li><li>Model fallback chain + template</li></ul></div>
+    </div>
+  </div>
+  <div class="grid g2">
+    <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Initial risk score</div>
+      <div class="formula">base = CVSS × 10 &nbsp;or&nbsp; severity (85/65/40/20)<br>malicious package → floor 95<br>+10 ships in production image<br>−25 dev / test only<br>+10 CI step with secrets<br>+5 direct dependency<br>+10 new vs trusted baseline<br>+5 no fixed version<br>→ Critical ≥ 80 · High ≥ 60 · Medium ≥ 35 · Low ≥ 15</div></div>
+    <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Evidence vs inference</div>
+      <div class="evbox" style="margin-bottom:10px"><div class="sec-t">✔ Verified evidence</div><div class="small">Output of OSV.dev, Trivy, Syft, lockfile diff and rules. Reproducible, and the only input to scoring.</div></div>
+      <div class="aiblk"><div class="sec-t">✦ AI inference</div><div class="small">Plain-English explanation, risk justification and next step. Must cite the evidence it used; invented IDs are removed.</div></div>
+      <div class="eyebrow" style="margin:16px 0 8px">Safety</div>
+      <ul class="small" style="margin:0;padding-left:18px;color:var(--ink-2)"><li>Target code is parsed only, never installed or run</li><li>Tamper scenario is local; reserved addresses only</li><li>API key stays in <code>.env</code>, never in reports</li><li>No auto-merge or deploy: human approval on Day 2</li></ul></div>
+  </div>
+  <div class="card pad" style="margin-top:16px"><div class="eyebrow" style="margin-bottom:10px">AI run audit trail</div>
+    <div class="small">Mode <b>${esc(R.ai.mode)}</b> · model <b>${esc(R.ai.model)}</b> · findings sent <b>${R.ai.sent_findings}</b> · API calls ${R.ai.calls.api} · cache hits ${R.ai.calls.cache_hits}</div>
+    <div style="margin-top:8px">${(R.ai.model_attempts||[]).map(a=>`<span class="chip" style="margin:2px">${esc(a)}</span>`).join('')}</div></div>`;
+}
+
+const [t0,a0] = location.hash.slice(1).split('/'); go(t0 || 'overview', a0 && decodeURIComponent(a0));
+})();
+</script>
+{% endraw %}
+</body>
+</html>

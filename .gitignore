@@ -1,0 +1,18 @@
+# secrets
+.env
+.env.*
+
+# generated
+output/
+.cache/
+__pycache__/
+*.pyc
+
+# target apps are cloned / generated locally
+targets/
+
+# organiser material marked "Internal - all rights reserved": never publish
+*.pdf
+
+# editor settings
+.vscode/
