@@ -324,6 +324,22 @@ def start_verify(slug):
     return jsonify({"job": jid})
 
 
+@app.get("/api/report/<slug>/verify/report")
+def verify_report(slug):
+    """BEFORE_AFTER.md for the last verification (detailed before/after record)."""
+    from .track import before_after_markdown
+    st = _fix_state(slug)
+    v, after = st["dir"] / "verification.json", st["dir"] / "verify" / "guardian_report.json"
+    if not v.exists() or not after.exists():
+        abort(404)
+    before = json.loads(_report_path(slug).read_text(encoding="utf-8"))
+    md = before_after_markdown(before, json.loads(after.read_text(encoding="utf-8")),
+                               json.loads(v.read_text(encoding="utf-8")), st["plan"], st["decisions"])
+    resp = app.response_class(md, mimetype="text/markdown")
+    resp.headers["Content-Disposition"] = f'attachment; filename="{slug}-before-after.md"'
+    return resp
+
+
 @app.get("/api/report/<slug>/verify")
 def verify_state(slug):
     from .verify import STEPS as VSTEPS
