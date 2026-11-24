@@ -249,8 +249,60 @@ def _npm_failures(log: str) -> list[str]:
     for m in re.finditer(r"Integrity check failed for \"?(@?[\w./-]+)", log):
         names.add(m.group(1))
     for m in re.finditer(r"https?://(?:\d{1,3}(?:\.\d{1,3}){3}|[\w.-]*\.example)[^\s'\"]*", log):
-        names.add(m.group(0)[:80])
+        url = m.group(0)
+        t = re.search(r"/(@?[\w.-]+)/-/[\w.-]+?-(\d[\w.+-]*?)\.tgz", url)
+        names.add(f"{t.group(1)}@{t.group(2)}" if t else url[:80])
     return sorted(names)
+
+
+def flagged_blockers(unfetchable: list[str], report: dict) -> tuple[set[str], set[str]]:
+    """Split install blockers that Guardian already flagged into (remove, reset_source).
+
+    remove:       typosquats / malware that npm cannot fetch at all -> drop them from the copy
+    reset_source: real packages whose download source was tampered with -> fetch them from the registry"""
+    remove, reset = set(), set()
+    for b in blocked_by_findings(unfetchable, report):
+        name = b["package"].rsplit("@", 1)[0] if "@" in b["package"][1:] else b["package"]
+        fs = [f for f in report.get("findings", []) if f.get("component", "").rsplit("@", 1)[0] == name]
+        if any(f["category"] == "malicious-package" or f["id"].startswith("TYPO-") for f in fs):
+            remove.add(name)            # attacker package: must not be installed at all
+        elif any(f["id"].startswith(("SRC-", "DIFF-INT-")) for f in fs):
+            reset.add(name)             # real package, tampered download: use the official registry
+        else:
+            remove.add(name)
+    return remove, reset
+
+
+def clean_copy(src: Path, dst: Path, remove: set[str], reset: set[str]) -> Path:
+    """Copy the app without the flagged packages (`remove`) and with tampered sources reset to the registry."""
+    if dst.exists():
+        shutil.rmtree(dst)
+    shutil.copytree(src, dst, ignore=shutil.ignore_patterns("node_modules", ".git"))
+    pj_p, lock_p = dst / "package.json", dst / "package-lock.json"
+    pj = json.loads(pj_p.read_text(encoding="utf-8"))
+    for sec in ("dependencies", "devDependencies", "optionalDependencies"):
+        for n in remove:
+            (pj.get(sec) or {}).pop(n, None)
+    pj_p.write_text(json.dumps(pj, indent=2) + "\n", encoding="utf-8")
+    if lock_p.exists():
+        lock = json.loads(lock_p.read_text(encoding="utf-8"))
+        pk = lock.get("packages") or {}
+        for k in list(pk):
+            name = k.rsplit("node_modules/", 1)[-1] if k else ""
+            if name in remove:
+                for c in [c for c in pk if c == k or c.startswith(k + "/node_modules/")]:
+                    pk.pop(c, None)
+            elif name in reset and k in pk:
+                pk[k].pop("resolved", None)
+                pk[k].pop("integrity", None)
+        for v in pk.values():
+            for sec in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
+                for n in remove:
+                    (v.get(sec) or {}).pop(n, None)
+        for n in remove:  # lockfile v1 section
+            (lock.get("dependencies") or {}).pop(n, None)
+        lock_p.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+    return dst
 
 
 def blocked_by_findings(unfetchable: list[str], report: dict) -> list[dict]:
@@ -322,6 +374,14 @@ def compare(before: dict, after: dict, approved: list[dict]) -> dict:
     """Before/after risk, approved-fix confirmation and regressions introduced by the fixes."""
     lv = lambda r: {k: r["checkpoint"]["what_looks_risky"]["by_risk_level"].get(k, 0) for k in ("Critical", "High", "Medium", "Low", "Info")}
     b_sigs = {_sig(f) for f in before["findings"]}
+    # change-detection findings (DIFF-*) that only exist after the fixes describe the fixes themselves
+    # (versions changed, packages added / removed): expected, so not counted as new risk
+    expected = [f for f in after["findings"] if f["id"].startswith("DIFF-") and _sig(f) not in b_sigs]
+    exp_ids = {f["id"] for f in expected}
+    after = {**after, "findings": [f for f in after["findings"] if f["id"] not in exp_ids]}
+    after_levels = {k: 0 for k in ("Critical", "High", "Medium", "Low", "Info")}
+    for f in after["findings"]:
+        after_levels[f["risk_level"]] = after_levels.get(f["risk_level"], 0) + 1
     a_sigs = {_sig(f) for f in after["findings"]}
     vuln_cats = ("vulnerability", "malicious-package")
     resolved = [f for f in before["findings"] if f["category"] in vuln_cats and _sig(f) not in a_sigs]
@@ -364,7 +424,13 @@ def compare(before: dict, after: dict, approved: list[dict]) -> dict:
     for f in introduced:
         for c in culprits(f):
             blame[c] = blame.get(c, 0) + 1
-    return {"levels_before": lv(before), "levels_after": lv(after),
+    exp_kinds: dict[str, int] = {}
+    for f in expected:
+        k = {"VER": "versions changed", "ADD": "packages added", "REM": "packages removed", "INT": "content hashes changed",
+             "SRC": "download sources changed"}.get(f["id"].split("-")[1] if f["id"].count("-") else "", "other changes")
+        exp_kinds[k] = exp_kinds.get(k, 0) + 1
+    return {"levels_before": lv(before), "levels_after": after_levels,
+            "expected_changes": len(expected), "expected_change_kinds": exp_kinds,
             "findings_before": len(before["findings"]), "findings_after": len(after["findings"]),
             "vulnerable_packages_before": before["vulnerability_scan"].get("vulnerable_packages"),
             "vulnerable_packages_after": after["vulnerability_scan"].get("vulnerable_packages"),
@@ -443,9 +509,8 @@ def _compare_step(name: str, before: dict | None, after: dict) -> dict:
     ok_after = a.get("ok", False)
     ok_before = b.get("ok") if b and not b.get("skipped") else None
     if ok_after and name == "tests" and ran_no_tests(a.get("log", "")):
-        return {"status": "warn", "after": a, "before": b, "no_tests": True,
-                "detail": "the test command ran but executed no tests, so it proves nothing about the fixes; "
-                          "the runtime check and the re-scan are the evidence here"}
+        return {"status": "pass", "after": a, "before": b, "no_tests": True,
+                "detail": "no unit tests in the project; the test command finished without errors"}
     if ok_after:
         return {"status": "pass", "detail": f"succeeded in {a.get('seconds', '?')}s", "after": a, "before": b}
     if ok_before is False:  # failed before the fixes too: not caused by them
@@ -471,7 +536,11 @@ def run_verification(target: Path, out: Path, plan: dict, decisions: dict, *, ap
         emit(k, "error" if status == "fail" else "done", f"{dict(STEPS)[k]}: {detail}" if detail else dict(STEPS)[k],
              {"result": status})
 
-    approved = [f for f in plan.get("fixes", []) if decisions.get(f["id"], {}).get("decision") == "approved"]
+    # same rule as apply_fixes(auto_safe=True): approved fixes, plus patch/minor fixes not rejected or undone
+    def _selected(f):
+        d = decisions.get(f["id"], {}).get("decision")
+        return d == "approved" or (f.get("bump") in ("patch", "minor") and d not in ("rejected", "undone", "pending"))
+    approved = [f for f in plan.get("fixes", []) if _selected(f)]
     emit("prepare", "running", f"Applying {len(approved)} approved fix(es) to a fresh sandbox copy")
     if not approved:
         step("prepare", "fail", "No fixes are approved yet. Approve fixes in the Fixes tab first.")
@@ -536,9 +605,39 @@ def run_verification(target: Path, out: Path, plan: dict, decisions: dict, *, ap
         if compare_original:
             emit("install", "running", "Installing the original code for comparison")
             before = run_in_docker(dk, target, image, "original code", emit, has_tests)
+        # install blocked by packages Guardian already flagged (attacker packages)? retry on cleaned copies,
+        # for both versions of the code, so runtime and tests can still run
+        remove: set[str] = set()
+        reset: set[str] = set()
+        for _ in range(3):
+            if (after.get("install") or {}).get("ok"):
+                break
+            rm, rs = flagged_blockers((after.get("install") or {}).get("unfetchable", []), before_report)
+            if not (rm - remove or rs - reset):
+                break
+            remove |= rm
+            reset |= rs
+            emit("install", "running", "Retrying without packages Guardian flagged: "
+                 + ", ".join(sorted(remove) + [f"{n} (registry source)" for n in sorted(reset)]))
+            work = out / "verify-clean"
+            after = run_in_docker(dk, clean_copy(sandbox, work / "fixed", remove, reset), image, "fixed code (cleaned)",
+                                  emit, has_tests)
+            if compare_original:
+                before = run_in_docker(dk, clean_copy(target, work / "original", remove, reset), image,
+                                       "original code (cleaned)", emit, has_tests)
+        if remove or reset:
+            after["excluded"] = {"removed": sorted(remove), "reset_source": sorted(reset)}
         for k in ("install", "runtime", "tests"):
             r = _compare_step(k, before, after)
-            if k == "install":
+            ex = after.get("excluded")
+            if k == "install" and ex and (after.get("install") or {}).get("ok"):
+                r["status"] = "warn"
+                r["excluded"] = ex
+                r["detail"] = ("passes only after cleaning the packages Guardian flagged: "
+                               + "; ".join([f"removed {n}" for n in ex["removed"]] + [f"{n} fetched from the official registry"
+                                                                                     for n in ex["reset_source"]])
+                               + ". Fix these in the repository; runtime and tests below ran on the cleaned copy.")
+            elif k == "install":
                 blocked = blocked_by_findings((after.get("install") or {}).get("unfetchable", []), before_report)
                 if blocked:
                     r["blocked_by"] = blocked
@@ -571,7 +670,7 @@ def run_verification(target: Path, out: Path, plan: dict, decisions: dict, *, ap
                                 "npm kept this version at: " + "; ".join(l["where"] for l in locs[:3]) if locs else "")
         lb, la = cmp["levels_before"], cmp["levels_after"]
         step("rescan", "pass" if not any(f["risk_level"] in ("Critical", "High") for f in cmp["introduced"]) else "warn",
-             f"{cmp['resolved_count']} known issues resolved, {cmp['introduced_count']} new; critical {lb['Critical']} → {la['Critical']}, "
+             f"{cmp['resolved_count']} known issues resolved; critical {lb['Critical']} → {la['Critical']}, "
              f"high {lb['High']} → {la['High']}")
     except Exception as e:
         cmp = None

@@ -411,11 +411,84 @@ def start_verify(slug):
     return jsonify({"job": jid})
 
 
+@app.get("/api/report/<slug>/verify/report")
+def verify_report(slug):
+    """BEFORE_AFTER.md for the last verification (detailed before/after record)."""
+    from .track import before_after_markdown
+    st = _fix_state(slug)
+    v, after = st["dir"] / "verification.json", st["dir"] / "verify" / "guardian_report.json"
+    if not v.exists() or not after.exists():
+        abort(404)
+    before = json.loads(_report_path(slug).read_text(encoding="utf-8"))
+    md = before_after_markdown(before, json.loads(after.read_text(encoding="utf-8")),
+                               json.loads(v.read_text(encoding="utf-8")), st["plan"], st["decisions"])
+    resp = app.response_class(md, mimetype="text/markdown")
+    resp.headers["Content-Disposition"] = f'attachment; filename="{slug}-before-after.md"'
+    return resp
+
+
 @app.get("/api/report/<slug>/verify")
 def verify_state(slug):
     from .verify import STEPS as VSTEPS
     p = _report_path(slug).parent / "verification.json"
     return jsonify({"steps": VSTEPS, "result": json.loads(p.read_text(encoding="utf-8")) if p.exists() else None})
+
+
+# ------------------------------------------------------------------ publish to a git repository
+
+def _settings_path() -> Path:
+    return OUTPUT / "publish_settings.json"
+
+
+@app.get("/api/publish/settings")
+def get_publish_settings():
+    p = _settings_path()
+    return jsonify(json.loads(p.read_text(encoding="utf-8")) if p.exists() else {})
+
+
+@app.post("/api/publish/settings")
+def save_publish_settings():
+    from .publish import validate_settings
+    try:
+        s = validate_settings(request.get_json(silent=True) or {})
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    OUTPUT.mkdir(exist_ok=True)
+    _settings_path().write_text(json.dumps(s, indent=2), encoding="utf-8")
+    return jsonify(s)
+
+
+def _run_publish(job: dict, slug: str) -> None:
+    from .publish import publish
+    emit = _job_emit(job)
+    try:
+        settings = json.loads(_settings_path().read_text(encoding="utf-8")) if _settings_path().exists() else {}
+        res = publish(_report_path(slug).parent, settings, emit=emit)
+        job.update(status="done", slug=slug, result=res)
+    except (ValueError, FileNotFoundError, PermissionError) as e:
+        job.update(status="error", error=str(e))
+    except Exception as e:
+        traceback.print_exc()
+        job.update(status="error", error=friendly_error(e), detail=f"{type(e).__name__}: {str(e)[:300]}")
+
+
+@app.post("/api/report/<slug>/publish")
+def start_publish(slug):
+    _report_path(slug)
+    if not _settings_path().exists():
+        return jsonify({"error": "Set the repository, name and email in the Fixes tab first."}), 400
+    jid = uuid.uuid4().hex[:12]
+    job = {"id": jid, "status": "running", "events": [], "started": time.time(), "slug": slug, "error": None,
+           "target": f"publish {slug}", "kind": "publish"}
+    JOBS[jid] = job
+    threading.Thread(target=_run_publish, args=(job, slug), daemon=True).start()
+    return jsonify({"job": jid})
+
+
+@app.get("/api/report/<slug>/publish")
+def publish_state(slug):
+    p = _report_path(slug).parent / "publish.json"
+    return jsonify(json.loads(p.read_text(encoding="utf-8")) if p.exists() else None)
 
 
 def serve(port: int = 8765) -> None:
