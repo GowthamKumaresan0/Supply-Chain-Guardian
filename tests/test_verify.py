@@ -161,7 +161,8 @@ def test_build_failure_before_and_after_is_not_blamed_on_fixes(tmp_path, app_dir
 
 def test_no_docker_and_no_approvals(tmp_path, app_dir, monkeypatch):
     out, plan, sandbox, apply = _setup(tmp_path, app_dir)
-    r = V.run_verification(app_dir, out, plan, {}, apply_fixes=apply, rescan_full=None, emit=lambda *a: None)
+    r = V.run_verification(app_dir, out, plan, {"FIX-lodash@4.17.20": {"decision": "rejected"}}, apply_fixes=apply,
+                           rescan_full=None, emit=lambda *a: None)
     assert r["verdict"] == "not-run" and "Approve fixes" in r["headline"]
     monkeypatch.setattr(V, "lockfile_problems", lambda app, run=None: [])
     r = V.run_verification(app_dir, out, plan, {"FIX-lodash@4.17.20": {"decision": "approved"}}, apply_fixes=apply,

@@ -536,7 +536,11 @@ def run_verification(target: Path, out: Path, plan: dict, decisions: dict, *, ap
         emit(k, "error" if status == "fail" else "done", f"{dict(STEPS)[k]}: {detail}" if detail else dict(STEPS)[k],
              {"result": status})
 
-    approved = [f for f in plan.get("fixes", []) if decisions.get(f["id"], {}).get("decision") == "approved"]
+    # same rule as apply_fixes(auto_safe=True): approved fixes, plus patch/minor fixes not rejected or undone
+    def _selected(f):
+        d = decisions.get(f["id"], {}).get("decision")
+        return d == "approved" or (f.get("bump") in ("patch", "minor") and d not in ("rejected", "undone", "pending"))
+    approved = [f for f in plan.get("fixes", []) if _selected(f)]
     emit("prepare", "running", f"Applying {len(approved)} approved fix(es) to a fresh sandbox copy")
     if not approved:
         step("prepare", "fail", "No fixes are approved yet. Approve fixes in the Fixes tab first.")

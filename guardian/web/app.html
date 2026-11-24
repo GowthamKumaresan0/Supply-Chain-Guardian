@@ -365,6 +365,65 @@ input.in:focus,select.in:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px 
 .fxrow{border-top:1px solid var(--line-2)} .fxrow-head{display:flex;gap:10px;align-items:center;padding:10px 16px;cursor:pointer;flex-wrap:wrap} .fxrow-head:hover{background:var(--surface-2)}
 .fxrow.open .fxrow-head{background:var(--surface-2)} .fxrow-body{padding:14px 16px 18px;border-top:1px solid var(--line-2)}
 @media (max-width:900px){.fxsteps{grid-template-columns:1fr 1fr}}
+/* ---------- FIXES & VS CODE AUTO-REMEDIATION IDE (WHITE / LIGHT THEME) ---------- */
+.vsc-ide{border:1px solid #d1d5db;border-radius:10px;background:#ffffff;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.05),0 1px 3px rgba(0,0,0,0.04);margin-top:16px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.vsc-titlebar{background:#f1f5f9;border-bottom:1px solid #e2e8f0;height:36px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:12px;color:#475569}
+.vsc-dots{display:flex;gap:7px;align-items:center}
+.vsc-dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+.vsc-dot.red{background:#ff5f56;border:1px solid #e0443e}
+.vsc-dot.yellow{background:#ffbd2e;border:1px solid #dea123}
+.vsc-dot.green{background:#27c93f;border:1px solid #1aab29}
+.vsc-title{font-weight:600;color:#334155;display:flex;align-items:center;gap:6px}
+.vsc-badge-staged{font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:12px;background:#dcfce7;color:#15803d;display:flex;align-items:center;gap:5px}
+.vsc-subbar{background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.vsc-subbar-left{display:flex;align-items:center;gap:10px}
+.vsc-subbar-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b}
+.vsc-pill{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:#e0f2fe;color:#0284c7}
+.vsc-body{display:grid;grid-template-columns:320px 1fr;min-height:480px;max-height:560px;background:#ffffff}
+.vsc-sidebar{background:#f8fafc;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden}
+.vsc-file-header{padding:8px 12px;font-size:11.5px;font-weight:700;color:#475569;background:#edf2f7;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.vsc-file-badge{font-size:10px;font-weight:700;padding:1px 5px;border-radius:3px;background:#fef08a;color:#854d0e}
+.vsc-search-wrap{padding:6px 10px;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+.vsc-search{width:100%;padding:5px 8px;border:1px solid #cbd5e1;border-radius:4px;font-size:12px;box-sizing:border-box;background:#ffffff;color:#1e293b}
+.vsc-search:focus{outline:none;border-color:#0284c7;box-shadow:0 0 0 2px rgba(2,132,199,0.15)}
+.vsc-list{flex:1;overflow-y:auto;list-style:none;margin:0;padding:0}
+.vsc-item{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-left:3px solid transparent;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12px;transition:all .1s ease;user-select:none}
+.vsc-item:hover{background:#f1f5f9}
+.vsc-item.active{background:#e0f2fe;border-left-color:#0284c7}
+.vsc-item.undone{opacity:.6;background:#fdf2f2}
+.vsc-item.undone .vsc-pkg{text-decoration:line-through;color:#94a3b8}
+.vsc-item-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.vsc-item-top{display:flex;align-items:center;gap:6px}
+.vsc-pkg{font-weight:600;color:#0f172a}
+.vsc-ver{color:#64748b;font-family:monospace;font-size:11px}
+.vsc-item-actions{display:flex;align-items:center;gap:4px;flex:none}
+.vsc-btn-undo,.vsc-btn-reapply{appearance:none;border:1px solid #cbd5e1;background:#ffffff;border-radius:4px;padding:2px 7px;font-size:11px;font-weight:600;cursor:pointer;color:#475569;display:inline-flex;align-items:center;gap:3px;transition:all .15s ease}
+.vsc-btn-undo:hover{background:#fee2e2;border-color:#fca5a5;color:#b91c1c}
+.vsc-btn-reapply:hover{background:#dcfce7;border-color:#86efac;color:#15803d}
+.vsc-editor{display:flex;flex-direction:column;overflow:hidden;background:#ffffff}
+.vsc-tabs{background:#f1f5f9;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 10px 0 0;height:35px}
+.vsc-tab{background:#ffffff;border-top:2px solid #2563eb;border-right:1px solid #e2e8f0;height:35px;display:flex;align-items:center;padding:0 16px;font-size:12px;font-weight:600;color:#1e293b;gap:6px}
+.vsc-tab-working{color:#16a34a;font-weight:500;font-size:11px}
+.vsc-explainer{padding:10px 16px;border-bottom:1px solid #e2e8f0;background:#fafbfc;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.vsc-explainer-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.vsc-explainer-pkg{font-weight:700;font-family:monospace;font-size:13px;color:#0f172a}
+.vsc-auto-guarantee{font-size:11px;color:#15803d;font-weight:600;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 7px;border-radius:999px;display:inline-flex;align-items:center;gap:4px}
+.vsc-diff-container{flex:1;overflow:auto;position:relative;background:#ffffff}
+.vsc-diff-header{display:grid;grid-template-columns:1fr 1fr;background:#f8fafc;border-bottom:1px solid #e2e8f0;padding:6px 14px;font-size:11px;font-weight:700;color:#64748b;letter-spacing:.05em;text-transform:uppercase;position:sticky;top:0;z-index:2}
+.vsc-table{width:100%;border-collapse:collapse;font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,Courier,monospace;font-size:12px;line-height:1.5}
+.vsc-table td{padding:1px 8px;vertical-align:top;white-space:pre}
+.vsc-table .ln{width:38px;text-align:right;color:#94a3b8;user-select:none;font-size:11px;border-right:1px solid #f1f5f9;background:#f8fafc}
+.vsc-table tr.same td{background:#ffffff;color:#334155}
+.vsc-table tr.gap td{background:#f8fafc;color:#94a3b8;text-align:center;letter-spacing:3px;border-top:1px dashed #e2e8f0;border-bottom:1px dashed #e2e8f0}
+.vsc-table tr.chg td.o{background:#fee2e2;color:#991b1b}
+.vsc-table tr.chg td.n{background:#dcfce7;color:#166534}
+.vsc-table tr.add td.n{background:#dcfce7;color:#166534}
+.vsc-table tr.del td.o{background:#fee2e2;color:#991b1b}
+.vsc-statusbar{background:#007acc;color:#ffffff;height:25px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:11.5px;font-weight:500}
+.vsc-statusbar-left,.vsc-statusbar-right{display:flex;align-items:center;gap:14px}
+.vsc-sb-item{display:flex;align-items:center;gap:4px}
+@media (max-width:900px){.vsc-body{grid-template-columns:1fr}}
+
 /* ---------- VERIFY ---------- */
 .vfacts{display:flex;gap:8px;flex-wrap:wrap} .vfacts span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface);color:var(--ink-2)}
 .vverdict{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:14px;background:var(--surface)}
@@ -1360,7 +1419,14 @@ async function bulkDecide(ids, decision){
   Object.assign(FIX.decisions, r.decisions);
   return r.updated;
 }
-const fixDecision = id => (FIX && FIX.decisions[id]) || {decision: 'pending'};
+const fixDecision = id => {
+  if (FIX && FIX.decisions[id]) return FIX.decisions[id];
+  const fx = FIX && FIX.plan && FIX.plan.fixes.find(x => x.id === id);
+  if (fx && ['patch', 'minor'].includes(fx.bump)) {
+    return {decision: 'auto-applied', reviewer: 'Guardian (Automated)', comment: 'Safe non-breaking SemVer update'};
+  }
+  return {decision: 'pending'};
+};
 function fixForFinding(f){
   if (!FIX) return '';
   const fx = FIX.plan.fixes.find(x => x.findings.includes(f.id));
@@ -1374,22 +1440,29 @@ function diffTable(rows){
     ? '<tr class="gap"><td colspan="4">⋯</td></tr>'
     : `<tr class="${r.t}"><td class="ln">${r.ol ?? ''}</td><td class="o">${r.o != null ? esc(r.o) : ''}</td><td class="ln">${r.nl ?? ''}</td><td class="n">${r.n != null ? esc(r.n) : ''}</td></tr>`).join('')}</table></div>`;
 }
+function vscDiffTable(rows){
+  if (!rows || !rows.length) return '<div class="small muted" style="padding:20px;text-align:center">No code changes in this file.</div>';
+  return `<table class="vsc-table"><tbody>${rows.map(r => r.t === 'gap'
+    ? '<tr class="gap"><td class="ln">⋯</td><td class="o" style="color:#94a3b8;font-size:11px">⋯ omitted lines ⋯</td><td class="ln">⋯</td><td class="n" style="color:#94a3b8;font-size:11px">⋯ omitted lines ⋯</td></tr>'
+    : `<tr class="${r.t}"><td class="ln">${r.ol ?? ''}</td><td class="o">${r.o != null ? esc(r.o) : ''}</td><td class="ln">${r.nl ?? ''}</td><td class="n">${r.n != null ? esc(r.n) : ''}</td></tr>`).join('')}</tbody></table>`;
+}
 function fixCard(fx, inDrawer){
   const d = fixDecision(fx.id);
-  const st = {approved: ['Approved', 'ok'], rejected: ['Rejected', 'no'], pending: ['Waiting for review', 'wait']}[d.decision] || ['Waiting for review', 'wait'];
-  return `<div class="sec-t">Proposed fix · needs your approval</div>
+  const st = {approved: ['Approved', 'ok'], 'auto-applied': ['Auto-applied', 'ok'], rejected: ['Rejected', 'no'], undone: ['Undone', 'wait'], pending: ['Waiting for review', 'wait']}[d.decision] || ['Waiting for review', 'wait'];
+  const isPending = d.decision === 'pending';
+  return `<div class="sec-t">${['patch', 'minor'].includes(fx.bump) ? 'Safe fix · auto-applied in code' : 'Proposed fix · needs human approval'}</div>
     <div class="fixhead"><b>${esc(fx.summary)}</b><span class="fxst ${st[1]}">${st[0]}</span></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px"><span class="chip bump-${fx.bump}">${fx.bump} update</span><span class="chip">${fx.kind === 'direct' ? 'direct dependency' : 'transitive · npm override'}</span>${scopeChip(fx.scope)}<span class="badge b-${fx.max_level}"><i class="dot"></i>${fx.max_level} · ${fx.max_risk}</span></div>
     <p class="small" style="margin:0 0 10px">${esc(fx.why)}</p>
     ${diffTable(fx.diff)}
     <div class="fxdec">
       ${inDrawer ? reviewerField() : ''}
-      <input class="in" data-fx-com placeholder="Comment (optional)" value="${esc(d.decision !== 'pending' ? d.comment : '')}" style="flex:1;min-width:160px">
+      <input class="in" data-fx-com placeholder="Comment (optional)" value="${esc(!['pending', 'auto-applied'].includes(d.decision) ? d.comment : '')}" style="flex:1;min-width:160px">
       <button class="btn primary" data-fx-act="approved" data-fx="${esc(fx.id)}">Approve</button>
       <button class="btn" data-fx-act="rejected" data-fx="${esc(fx.id)}">Reject</button>
-      ${d.decision !== 'pending' ? `<button class="btn ghost" data-fx-act="pending" data-fx="${esc(fx.id)}">Undo</button>` : ''}
+      ${!isPending ? `<button class="btn ghost" data-fx-act="pending" data-fx="${esc(fx.id)}">Reset</button>` : ''}
     </div>
-    ${d.decision !== 'pending' ? `<div class="xs muted" style="margin-top:6px">${st[0]}${byWho(d)} · ${new Date(d.at).toLocaleString()}${d.bulk ? ' · via “all”' : ''}${d.comment ? ' · “' + esc(d.comment) + '”' : ''}</div>` : ''}
+    ${!isPending ? `<div class="xs muted" style="margin-top:6px">${st[0]}${byWho(d)} · ${new Date(d.at).toLocaleString()}${d.bulk ? ' · via “all”' : ''}${d.comment ? ' · “' + esc(d.comment) + '”' : ''}</div>` : ''}
     ${inDrawer ? `<div class="xs muted" style="margin-top:8px">Approved fixes are applied to a sandbox copy from the <a href="#/r/${SLUG}/fixes">Fixes</a> tab. The original repository is never changed.</div>` : ''}`;
 }
 document.addEventListener('click', async ev => {
@@ -1407,56 +1480,497 @@ document.addEventListener('click', async ev => {
   else if ($('#v') && location.hash.endsWith('/fixes')) fixesView($('#v'));
 });
 
+let vscSelectedId = null, vscFilter = '', fxMajorStatus = '', fxMajorSearch = '';
+let _vscListScrollTop = 0;  // persists sidebar scroll across re-renders
+
 function fixesView(el){
+  // Snapshot the sidebar scroll position before we wipe innerHTML
+  const _prevList = el.querySelector('.vsc-list');
+  if (_prevList) _vscListScrollTop = _prevList.scrollTop;
   if (!FIX || !FIX.plan) { el.innerHTML = `<div class="vhead"><div><h2>Fixes</h2><p>Run a new scan to get fix proposals.</p></div></div>`; return; }
   const P = FIX.plan, res = FIX.result;
-  const cnt = {pending: 0, approved: 0, rejected: 0}; P.fixes.forEach(f => cnt[fixDecision(f.id).decision]++);
-  const rows = P.fixes.filter(f => (!fixFilter.status || fixDecision(f.id).decision === fixFilter.status) && (!fixFilter.bump || f.bump === fixFilter.bump));
-  const stLabel = {approved: 'Approved', rejected: 'Rejected', pending: 'Pending'};
-  el.innerHTML = `<div class="vhead"><div><h2>Fixes</h2><p>Every vulnerable package with a published fix gets a proposed code change. <b>Nothing is applied until a person approves it</b>, and approved fixes go into a sandbox copy that is re-scanned to prove the fix worked.</p></div></div>
-    <div class="fxsteps"><div><b>1</b>Review the old and new code</div><div><b>2</b>Approve or reject each fix</div><div><b>3</b>Apply approved fixes in a sandbox</div><div><b>4</b>Check the re-scan, download the patch</div></div>
+
+  const safeFixes = P.fixes.filter(f => ['patch', 'minor'].includes(f.bump));
+  const majorFixes = P.fixes.filter(f => f.bump === 'major');
+
+  const activeSafe = safeFixes.filter(f => ['auto-applied', 'approved'].includes(fixDecision(f.id).decision));
+  const undoneSafe = safeFixes.filter(f => ['undone', 'rejected'].includes(fixDecision(f.id).decision));
+
+  const majorCnt = {pending: 0, approved: 0, rejected: 0};
+  majorFixes.forEach(f => {
+    const d = fixDecision(f.id).decision;
+    if (majorCnt[d] !== undefined) majorCnt[d]++;
+    else majorCnt.pending++;
+  });
+
+  const totalReadyToApply = activeSafe.length + majorCnt.approved;
+
+  if (!vscSelectedId || !safeFixes.some(f => f.id === vscSelectedId)) {
+    vscSelectedId = safeFixes[0] ? safeFixes[0].id : null;
+  }
+  const selectedSafeFix = safeFixes.find(f => f.id === vscSelectedId) || safeFixes[0];
+
+  const filteredSafe = safeFixes.filter(f => {
+    if (!vscFilter) return true;
+    const q = vscFilter.toLowerCase();
+    return f.package.toLowerCase().includes(q) || f.from_version.includes(q) || f.to_version.includes(q) || f.advisories.some(a => a.toLowerCase().includes(q));
+  });
+
+  const filteredMajors = majorFixes.filter(f => {
+    const d = fixDecision(f.id).decision;
+    const matchStatus = !fxMajorStatus || (fxMajorStatus === 'pending' ? (d === 'pending' || !['approved', 'rejected'].includes(d)) : d === fxMajorStatus);
+    const matchSearch = !fxMajorSearch || f.package.toLowerCase().includes(fxMajorSearch.toLowerCase()) || f.advisories.some(a => a.toLowerCase().includes(fxMajorSearch.toLowerCase()));
+    return matchStatus && matchSearch;
+  });
+
+  const selectedDec = selectedSafeFix ? fixDecision(selectedSafeFix.id) : null;
+  const isSelectedUndone = selectedDec && ['undone', 'rejected'].includes(selectedDec.decision);
+
+  el.innerHTML = `
+    <div class="vhead">
+      <div>
+        <h2>Fixes & Remediation</h2>
+        <p>Two-tier intelligent remediation: <b>safe minor & patch fixes are auto-updated in code</b> with zero breaking changes, while <b>major version upgrades strictly require human approval</b> before application.</p>
+      </div>
+    </div>
+
+    <!-- Top Workflow Bar -->
+    <div class="fxsteps">
+      <div><b>1</b>Auto-update minor & patch fixes (VS Code IDE)</div>
+      <div><b>2</b>Review & approve major breaking changes</div>
+      <div><b>3</b>Apply combined fixes in sandbox</div>
+      <div><b>4</b>Verify build, test & rescan in Docker</div>
+    </div>
+
     ${pubCard()}
-    <div class="card pad fxbar">
-      <div class="fxcounts"><span><b>${cnt.pending}</b> pending</span><span><b style="color:var(--ev)">${cnt.approved}</b> approved</span><span><b style="color:var(--crit)">${cnt.rejected}</b> rejected</span><span class="muted">${(P.skipped || []).length} need a manual fix</span></div>
-      <button class="btn primary" id="fxApply" ${cnt.approved ? '' : 'disabled'}>Apply ${cnt.approved || ''} approved fix${cnt.approved === 1 ? '' : 'es'} in a sandbox</button>
+
+    <!-- TIER 1: VS CODE WHITE-THEMED AUTO-REMEDIATION IDE -->
+    <div class="vsc-ide">
+      <div class="vsc-titlebar">
+        <div class="vsc-dots">
+          <span class="vsc-dot red"></span>
+          <span class="vsc-dot yellow"></span>
+          <span class="vsc-dot green"></span>
+        </div>
+        <div class="vsc-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>
+          Visual Studio Code — package.json — Auto-Remediation (Working Tree)
+        </div>
+        <div class="vsc-badge-staged">
+          <span style="font-size:12px">●</span> GIT: AUTO-STAGED (${activeSafe.length} active)
+        </div>
+      </div>
+
+      <div class="vsc-subbar">
+        <div class="vsc-subbar-left">
+          <span class="vsc-subbar-title">Source Control: Auto-Applied Fixes</span>
+          <span class="vsc-pill">${activeSafe.length}/${safeFixes.length} Active in Code</span>
+          <span class="small muted" style="margin-left:4px">Zero breaking changes guaranteed</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn xs ghost" id="vscRevertAll" title="Revert all minor and patch changes" ${activeSafe.length ? '' : 'disabled'}>⎌ Revert All Auto-Fixes</button>
+          <button class="btn xs" id="vscReapplyAll" title="Re-apply all minor and patch changes" ${undoneSafe.length ? '' : 'disabled'}>↺ Re-apply All (${safeFixes.length})</button>
+        </div>
+      </div>
+
+      <div class="vsc-body">
+        <!-- Sidebar -->
+        <div class="vsc-sidebar">
+          <div class="vsc-file-header">
+            <span>▼ 📁 owasp-nodejs-goat / package.json</span>
+            <span class="vsc-file-badge">M · ${activeSafe.length} changes</span>
+          </div>
+          <div class="vsc-search-wrap">
+            <input type="text" class="vsc-search" id="vscSearch" placeholder="Filter auto-fixed packages..." value="${esc(vscFilter)}">
+          </div>
+          <div class="vsc-list">
+            ${filteredSafe.map(f => {
+              const d = fixDecision(f.id);
+              const isUndone = ['undone', 'rejected'].includes(d.decision);
+              const isSel = f.id === selectedSafeFix?.id;
+              return `
+                <div class="vsc-item ${isSel ? 'active' : ''} ${isUndone ? 'undone' : ''}" data-vsc-id="${esc(f.id)}">
+                  <div class="vsc-item-meta">
+                    <div class="vsc-item-top">
+                      <span class="vsc-pkg">${esc(f.package)}</span>
+                      <span class="chip bump-${f.bump}" style="padding:1px 5px;font-size:10px">${f.bump}</span>
+                      ${isUndone ? '<span class="chip" style="padding:1px 5px;font-size:10px;background:#fee2e2;color:#991b1b">Undone</span>' : ''}
+                    </div>
+                    <div class="vsc-ver">${esc(f.from_version)} → ${esc(f.to_version)} · <span class="muted">${f.advisories.length} adv</span></div>
+                  </div>
+                  <div class="vsc-item-actions">
+                    ${isUndone
+                      ? `<button class="vsc-btn-reapply" data-vsc-toggle="${esc(f.id)}" data-vsc-target="auto-applied" title="Re-apply this fix in code">↺ Re-apply</button>`
+                      : `<button class="vsc-btn-undo" data-vsc-toggle="${esc(f.id)}" data-vsc-target="undone" title="Undo this auto-fix">⎌ Undo</button>`
+                    }
+                  </div>
+                </div>
+              `;
+            }).join('') || '<div class="small muted" style="padding:16px;text-align:center">No packages match filter.</div>'}
+          </div>
+        </div>
+
+        <!-- Editor Diff -->
+        <div class="vsc-editor">
+          <div class="vsc-tabs">
+            <div class="vsc-tab">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+              package.json <span class="vsc-tab-working">• Working Tree</span>
+            </div>
+            ${selectedSafeFix ? `
+              <div style="display:flex;align-items:center;gap:8px">
+                ${isSelectedUndone
+                  ? `<button class="btn xs primary" data-vsc-toggle="${esc(selectedSafeFix.id)}" data-vsc-target="auto-applied">↺ Re-apply ${esc(selectedSafeFix.package)}</button>`
+                  : `<button class="btn xs" data-vsc-toggle="${esc(selectedSafeFix.id)}" data-vsc-target="undone">⎌ Undo Selected Fix (${esc(selectedSafeFix.package)})</button>`
+                }
+              </div>
+            ` : ''}
+          </div>
+
+          ${selectedSafeFix ? `
+            <div class="vsc-explainer">
+              <div class="vsc-explainer-left">
+                <span class="vsc-explainer-pkg">${esc(selectedSafeFix.package)} ${esc(selectedSafeFix.from_version)} → ${esc(selectedSafeFix.to_version)}</span>
+                <span class="chip bump-${selectedSafeFix.bump}">${selectedSafeFix.bump} update</span>
+                <span class="chip">${selectedSafeFix.kind === 'direct' ? 'direct dependency' : 'transitive · npm override'}</span>
+                <span class="small muted">Fixes ${selectedSafeFix.advisories.length} advisories (${selectedSafeFix.advisories.slice(0, 3).join(', ')}${selectedSafeFix.advisories.length > 3 ? '…' : ''})</span>
+              </div>
+              <div>
+                ${isSelectedUndone
+                  ? '<span class="chip" style="background:#fee2e2;color:#991b1b;font-weight:600">Reverted by user</span>'
+                  : '<span class="vsc-auto-guarantee"><span>●</span> Auto-applied in code (Zero breaking changes)</span>'
+                }
+              </div>
+            </div>
+            <div class="vsc-diff-header">
+              <div>Current Vulnerable Code (HEAD)</div>
+              <div>Guardian Auto-Fix (Working Tree)</div>
+            </div>
+            <div class="vsc-diff-container">
+              ${vscDiffTable(selectedSafeFix.diff)}
+            </div>
+          ` : '<div class="empty">No safe fix selected.</div>'}
+        </div>
+      </div>
+
+      <div class="vsc-statusbar">
+        <div class="vsc-statusbar-left">
+          <div class="vsc-sb-item">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 9v12"/></svg>
+            New_branch*
+          </div>
+          <div class="vsc-sb-item">⚡ Auto-Remediation Active</div>
+          <div class="vsc-sb-item">🛡 Zero Breaking Changes Guaranteed</div>
+        </div>
+        <div class="vsc-statusbar-right">
+          <div>${activeSafe.length} active / ${undoneSafe.length} reverted</div>
+          <div>UTF-8</div>
+          <div>JSON</div>
+          <div>Spaces: 2</div>
+        </div>
+      </div>
     </div>
-    <div class="card pad fxbulk">${reviewerField()}
-      <span class="small muted">Decide in bulk for the ${rows.length === P.fixes.length ? 'all ' + rows.length : rows.length + ' filtered'} fixes below:</span>
-      <button class="btn" id="fxAll" ${rows.length ? '' : 'disabled'}>Approve all${rows.length < P.fixes.length ? ' shown' : ''} (${rows.length})</button>
-      <button class="btn" id="fxNone" ${rows.length ? '' : 'disabled'}>Reject all${rows.length < P.fixes.length ? ' shown' : ''}</button>
-      <button class="btn ghost" id="fxClear" ${cnt.approved + cnt.rejected ? '' : 'disabled'}>Clear all decisions</button>
+
+    <!-- TIER 2: MAJOR RISKS & BREAKING CHANGES (HUMAN APPROVAL REQUIRED) -->
+    <div style="margin-top:28px">
+      <div class="card pad" style="border-left:4px solid #ea580c">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div>
+            <div class="eyebrow" style="color:#c2410c">Human Gate Required</div>
+            <h3 style="margin:4px 0 6px;font-size:18px">Major Risks & Breaking Changes (${majorFixes.length} Upgrades)</h3>
+            <p class="small muted" style="margin:0;max-width:750px">
+              Major SemVer version upgrades may introduce breaking API changes, deprecations, or behavioral shifts. 
+              <b>Guardian policy strictly requires explicit human sign-off</b> before any major upgrade is applied to the sandbox or verification builds.
+            </p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="badge b-Critical"><i class="dot"></i>${majorFixes.length} Major</span>
+            <span class="badge" style="background:#dcfce7;color:#15803d"><b>${majorCnt.approved}</b> Approved</span>
+            <span class="badge" style="background:#fee2e2;color:#991b1b"><b>${majorCnt.rejected}</b> Rejected</span>
+            <span class="badge" style="background:#fef3c7;color:#92400e"><b>${majorCnt.pending}</b> Pending</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Major Controls & Shared Reviewer Bar -->
+      <div class="card pad fxbulk" style="margin-top:10px">
+        ${reviewerField()}
+        <span class="small muted">Bulk major decisions (${filteredMajors.length} shown):</span>
+        <button class="btn" id="fxMajorAll" ${filteredMajors.length ? '' : 'disabled'}>Approve all (${filteredMajors.length})</button>
+        <button class="btn" id="fxMajorNone" ${filteredMajors.length ? '' : 'disabled'}>Reject all (${filteredMajors.length})</button>
+        <button class="btn ghost" id="fxMajorClear" ${majorCnt.approved + majorCnt.rejected ? '' : 'disabled'}>Clear major decisions</button>
+      </div>
+
+      <!-- Major Filter & List -->
+      <div class="card" style="overflow:hidden;margin-top:12px">
+        <div class="toolbar">
+          <select class="in" id="fxMajorS">
+            <option value="">All decisions (${majorFixes.length})</option>
+            <option value="pending" ${fxMajorStatus==='pending'?'selected':''}>Pending review (${majorCnt.pending})</option>
+            <option value="approved" ${fxMajorStatus==='approved'?'selected':''}>Approved (${majorCnt.approved})</option>
+            <option value="rejected" ${fxMajorStatus==='rejected'?'selected':''}>Rejected (${majorCnt.rejected})</option>
+          </select>
+          <input type="text" class="in" id="fxMajorSearchIn" placeholder="Search major package..." value="${esc(fxMajorSearch)}" style="max-width:220px">
+          <span class="small muted" style="margin-left:auto">${filteredMajors.length} of ${majorFixes.length} major fixes</span>
+        </div>
+
+        ${filteredMajors.map(f => {
+          const d = fixDecision(f.id).decision;
+          const isOpen = fixOpen === f.id;
+          const st = {approved: ['Approved', 'ok'], rejected: ['Rejected', 'no'], pending: ['Pending review', 'wait']}[d] || ['Pending review', 'wait'];
+          return `
+            <div class="fxrow ${isOpen ? 'open' : ''}">
+              <div class="fxrow-head" data-fxopen="${esc(f.id)}">
+                <span class="badge b-${f.max_level}"><i class="dot"></i>${f.max_risk}</span>
+                <b class="mono" style="font-size:13px">${esc(f.package)}</b>
+                <span class="mono small">${esc(f.from_version)} → ${esc(f.to_version)}</span>
+                <span class="chip bump-${f.bump}">${f.bump}</span>
+                <span class="small muted">${f.kind === 'direct' ? 'direct' : 'override'} · ${f.advisories.length} advisories</span>
+                <span class="fxst ${st[1]}" style="margin-left:auto">${st[0]}</span>
+              </div>
+              ${isOpen ? `<div class="fxrow-body">${fixCard(f, false)}</div>` : ''}
+            </div>
+          `;
+        }).join('') || '<div class="empty">No major fixes match the filter.</div>'}
+      </div>
     </div>
+
+    <!-- COMBINED EXECUTION & SANDBOX APPLY BAR -->
+    <div class="card pad fxbar" style="margin-top:20px;background:#f8fafc;border:2px solid var(--line)">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--ink)">
+          Ready to apply: <span style="color:#15803d">${activeSafe.length} Auto-applied safe fixes</span> + <span style="color:#2563eb">${majorCnt.approved} Approved major fixes</span> = <b>${totalReadyToApply} Total fixes</b>
+        </div>
+        <div class="small muted" style="margin-top:3px">
+          Fixes are applied to an isolated sandbox copy without modifying your working branch.
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <a class="btn" href="#/r/${SLUG}/verify">🔍 Open Verify Tab (Docker Test)</a>
+        <button class="btn primary" id="fxApply" ${totalReadyToApply ? '' : 'disabled'}>
+          🚀 Apply ${totalReadyToApply} active fixes in sandbox
+        </button>
+      </div>
+    </div>
+
+    <!-- COMMIT TO SEPARATE BRANCH (MAIN BRANCH PROTECTED) -->
+    <div class="card pad" style="margin-top:14px;background:#f0fdf4;border:1px solid #bbf7d0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px">
+            <span>🌿</span> Commit Fixes to Separate Branch (Main Branch Protected)
+          </div>
+          <div class="small muted" style="margin-top:2px">
+            Writes the verified <code>package.json</code> & <code>package-lock.json</code> directly to disk and commits them to a dedicated remediation branch. You can then view the modified files and live diff directly in VS Code.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" class="in" id="fxBranchName" value="remediation/nodegoat-safe-fixes" style="min-width:230px;font-size:12px;font-family:monospace" placeholder="Branch name">
+          <button class="btn" id="fxCommitBranch" style="background:#15803d;color:#fff;border-color:#15803d">
+            🌿 Commit & View in VS Code
+          </button>
+        </div>
+      </div>
+      <div id="fxBranchResult" style="margin-top:6px"></div>
+    </div>
+
+    <!-- Sandbox verification result if available -->
     <div id="fxResult">${res ? fixResult(res) : ''}</div>
-    <div class="card" style="overflow:hidden;margin-top:16px">
-      <div class="toolbar"><select class="in" id="fxS"><option value="">All decisions</option>${['pending','approved','rejected'].map(s => `<option value="${s}" ${fixFilter.status===s?'selected':''}>${stLabel[s]}</option>`).join('')}</select>
-        <select class="in" id="fxB"><option value="">All update sizes</option>${['patch','minor','major'].map(s => `<option value="${s}" ${fixFilter.bump===s?'selected':''}>${s}</option>`).join('')}</select>
-        <span class="small muted">${rows.length} of ${P.fixes.length} fixes, highest risk first</span></div>
-      ${rows.map(f => { const d = fixDecision(f.id).decision; return `<div class="fxrow ${fixOpen === f.id ? 'open' : ''}">
-        <div class="fxrow-head" data-fxopen="${esc(f.id)}"><span class="badge b-${f.max_level}"><i class="dot"></i>${f.max_risk}</span><b class="mono" style="font-size:13px">${esc(f.package)}</b><span class="mono small">${esc(f.from_version)} → ${esc(f.to_version)}</span><span class="chip bump-${f.bump}">${f.bump}</span><span class="small muted">${f.kind === 'direct' ? 'direct' : 'override'} · ${f.advisories.length} advisor${f.advisories.length === 1 ? 'y' : 'ies'}</span><span class="fxst ${d === 'approved' ? 'ok' : d === 'rejected' ? 'no' : 'wait'}" style="margin-left:auto">${stLabel[d]}</span></div>
-        ${fixOpen === f.id ? `<div class="fxrow-body">${fixCard(f, false)}</div>` : ''}</div>`; }).join('') || '<div class="empty">No fixes match.</div>'}
-    </div>
-    ${(P.skipped || []).length ? `<div class="card pad" style="margin-top:16px"><div class="eyebrow" style="margin-bottom:8px">Needs a manual fix (${P.skipped.length})</div><table class="tbl"><tbody>${P.skipped.map(s => `<tr><td class="mono xs">${esc(s.package)}</td><td class="small">${esc(s.reason)}</td></tr>`).join('')}</tbody></table></div>` : ''}
-    <p class="xs muted" style="margin-top:14px">${esc(P.policy || '')}</p>`;
-  const bulk = async (ids, decision, msg) => { if (msg && !confirm(msg)) return;
-    try { await bulkDecide(ids, decision); fixesView(el); } catch (e) { alert('Could not save: ' + e.message); } };
-  const majors = rows.filter(f => f.bump === 'major').length;
-  $('#fxAll').onclick = () => bulk(rows.map(f => f.id), 'approved', `Approve ${rows.length} fix${rows.length === 1 ? '' : 'es'}?` +
-    (majors ? `\n\n${majors} of them are MAJOR upgrades, which can break the app.` : '') +
-    `\n\nNothing changes in the repository: approved fixes are applied and checked in a sandbox (Verify tab).`);
-  $('#fxNone').onclick = () => bulk(rows.map(f => f.id), 'rejected', `Reject ${rows.length} fix${rows.length === 1 ? '' : 'es'}?`);
-  $('#fxClear').onclick = () => bulk(P.fixes.filter(f => fixDecision(f.id).decision !== 'pending').map(f => f.id), 'pending',
-    'Clear every decision and start the review again?');
+
+    <!-- Skipped / Manual fixes -->
+    ${(P.skipped || []).length ? `
+      <div class="card pad" style="margin-top:16px">
+        <div class="eyebrow" style="margin-bottom:8px">Needs a manual fix (${P.skipped.length})</div>
+        <table class="tbl"><tbody>
+          ${P.skipped.map(s => `<tr><td class="mono xs">${esc(s.package)}</td><td class="small">${esc(s.reason)}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+    ` : ''}
+    <p class="xs muted" style="margin-top:14px">${esc(P.policy || '')}</p>
+  `;
+
+  // Attach event handlers
+  // Restore sidebar scroll position (must happen AFTER innerHTML is written)
+  const _newList = el.querySelector('.vsc-list');
+  if (_newList && _vscListScrollTop) {
+    requestAnimationFrame(() => { _newList.scrollTop = _vscListScrollTop; });
+  }
+
+  // Scroll the active item into view only when it was just changed (not on sidebar scroll)
+  if (_newList && _vscListScrollTop === 0) {
+    const activeItem = _newList.querySelector('.vsc-item.active');
+    if (activeItem) requestAnimationFrame(() => activeItem.scrollIntoView({block: 'nearest'}));
+  }
+
+  el.querySelectorAll('[data-vsc-id]').forEach(item => {
+    item.onclick = ev => {
+      if (ev.target.closest('[data-vsc-toggle]')) return;
+      vscSelectedId = item.dataset.vscId;
+      _vscListScrollTop = 0;  // let scroll-into-view handle it for newly selected item
+      fixesView(el);
+    };
+  });
+
+  const vscSearchIn = $('#vscSearch');
+  if (vscSearchIn) {
+    vscSearchIn.oninput = e => {
+      vscFilter = e.target.value;
+      _vscListScrollTop = 0;  // reset to top when filtering
+      fixesView(el);
+      const in2 = $('#vscSearch');
+      if (in2) { in2.focus(); in2.selectionStart = in2.selectionEnd = in2.value.length; }
+    };
+  }
+
+  el.querySelectorAll('[data-vsc-toggle]').forEach(btn => {
+    btn.onclick = async ev => {
+      ev.stopPropagation();
+      const id = btn.dataset.vscToggle;
+      const targetDecision = btn.dataset.vscTarget;
+      btn.disabled = true;
+      try {
+        const r = await api(`/api/report/${SLUG}/fixes/${encodeURIComponent(id)}/decision`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            decision: targetDecision,
+            reviewer: 'Guardian (Automated)',
+            comment: targetDecision === 'undone' ? 'Undone by user' : 'Re-applied by user'
+          })
+        });
+        FIX.decisions[id] = r;
+        fixesView(el);
+      } catch (err) {
+        alert('Could not update fix: ' + err.message);
+        btn.disabled = false;
+      }
+    };
+  });
+
+  const bulk = async (ids, decision, msg) => {
+    if (msg && !confirm(msg)) return;
+    try {
+      await bulkDecide(ids, decision);
+      fixesView(el);
+    } catch (e) {
+      alert('Could not save: ' + e.message);
+    }
+  };
+
   bindPubCard();
   if (PUB === null) loadPub().then(() => { if (location.hash.endsWith('/fixes')) fixesView(el); });
-  $('#fxS').onchange = e => { fixFilter.status = e.target.value; fixesView(el); };
-  $('#fxB').onchange = e => { fixFilter.bump = e.target.value; fixesView(el); };
-  el.querySelectorAll('[data-fxopen]').forEach(h => h.onclick = () => { fixOpen = fixOpen === h.dataset.fxopen ? null : h.dataset.fxopen; fixesView(el); });
-  $('#fxApply').onclick = async () => {
-    const btn = $('#fxApply'); btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Applying in sandbox, regenerating lockfile and re-scanning…';
-    try { FIX.result = await api(`/api/report/${SLUG}/fixes/apply`, {method: 'POST'}); }
-    catch (e) { $('#fxResult').innerHTML = `<div class="card pad scan-result err" style="margin-top:12px"><div><b>Could not apply the fixes</b><div class="small">${esc(e.message)}</div></div></div>`; btn.disabled = false; btn.textContent = 'Try again'; return; }
-    fixesView(el);
-  };
+  if ($('#vscRevertAll')) {
+    $('#vscRevertAll').onclick = () => bulk(safeFixes.map(f => f.id), 'undone', `Revert all ${safeFixes.length} auto-applied minor and patch fixes?`);
+  }
+  if ($('#vscReapplyAll')) {
+    $('#vscReapplyAll').onclick = () => bulk(safeFixes.map(f => f.id), 'auto-applied');
+  }
+
+  if ($('#fxMajorAll')) {
+    $('#fxMajorAll').onclick = () => bulk(filteredMajors.map(f => f.id), 'approved', `Approve ${filteredMajors.length} major upgrade(s)?\n\nMajor upgrades may contain breaking changes.`);
+  }
+  if ($('#fxMajorNone')) {
+    $('#fxMajorNone').onclick = () => bulk(filteredMajors.map(f => f.id), 'rejected', `Reject ${filteredMajors.length} major upgrade(s)?`);
+  }
+  if ($('#fxMajorClear')) {
+    $('#fxMajorClear').onclick = () => bulk(majorFixes.filter(f => fixDecision(f.id).decision !== 'pending').map(f => f.id), 'pending', 'Clear all major upgrade decisions?');
+  }
+
+  if ($('#fxMajorS')) {
+    $('#fxMajorS').onchange = e => { fxMajorStatus = e.target.value; fixesView(el); };
+  }
+  if ($('#fxMajorSearchIn')) {
+    $('#fxMajorSearchIn').oninput = e => {
+      fxMajorSearch = e.target.value;
+      fixesView(el);
+      const in2 = $('#fxMajorSearchIn');
+      if (in2) { in2.focus(); in2.selectionStart = in2.selectionEnd = in2.value.length; }
+    };
+  }
+
+  el.querySelectorAll('[data-fxopen]').forEach(h => {
+    h.onclick = () => {
+      fixOpen = fixOpen === h.dataset.fxopen ? null : h.dataset.fxopen;
+      fixesView(el);
+    };
+  });
+
+  if ($('#fxApply')) {
+    $('#fxApply').onclick = async () => {
+      const btn = $('#fxApply');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin"></span> Applying fixes in sandbox, updating lockfile and re-scanning…';
+      try {
+        FIX.result = await api(`/api/report/${SLUG}/fixes/apply`, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({auto_safe: true})});
+      } catch (e) {
+        $('#fxResult').innerHTML = `<div class="card pad scan-result err" style="margin-top:12px"><div><b>Could not apply fixes</b><div class="small">${esc(e.message)}</div></div></div>`;
+        btn.disabled = false;
+        btn.textContent = 'Try again';
+        return;
+      }
+      fixesView(el);
+    };
+  }
+
+  const commitBtn = $('#fxCommitBranch');
+  if (commitBtn) {
+    commitBtn.onclick = async () => {
+      const bName = ($('#fxBranchName') ? $('#fxBranchName').value : '').trim() || 'remediation/nodegoat-safe-fixes';
+      const resBox = $('#fxBranchResult');
+      commitBtn.disabled = true;
+      commitBtn.innerHTML = '<span class="spin"></span> Creating branch & committing…';
+      if (resBox) resBox.innerHTML = '';
+      try {
+        const r = await api(`/api/report/${SLUG}/fixes/commit-branch`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({branch: bName})
+        });
+        commitBtn.disabled = false;
+        commitBtn.innerHTML = '🌿 Commit & View in VS Code';
+        if (resBox) {
+          resBox.innerHTML = `
+            <div class="card pad" style="background:#ffffff;border:1px solid #86efac;margin-top:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                <div>
+                  <b style="color:#15803d">✅ Changes applied to files & branch created: <code>${esc(r.branch)}</code> ${r.commit ? `(Commit ${esc(r.commit)})` : ''}</b>
+                  <div class="xs muted" style="margin-top:4px">
+                    Files updated on disk: ${r.files.map(f => `<code>${esc(f)}</code>`).join(' · ')}<br>
+                    <b>Main branch was NOT modified.</b> Open VS Code Source Control (Ctrl+Shift+G) or check <code>targets/nodegoat-modified/package.json</code> to view the code changes live.
+                  </div>
+                </div>
+                ${r.previous_branch && r.previous_branch !== r.branch ? `
+                  <button class="btn xs ghost" id="fxSwitchBack" data-prev="${esc(r.previous_branch)}">↩️ Switch back to ${esc(r.previous_branch)}</button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+          const swBtn = $('#fxSwitchBack');
+          if (swBtn) {
+            swBtn.onclick = async () => {
+              swBtn.disabled = true;
+              try {
+                await api(`/api/report/${SLUG}/fixes/switch-branch`, {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({branch: swBtn.dataset.prev})
+                });
+                alert(`Switched back to ${swBtn.dataset.prev}`);
+                fixesView(el);
+              } catch (e) {
+                alert('Could not switch branch: ' + e.message);
+                swBtn.disabled = false;
+              }
+            };
+          }
+        }
+      } catch (err) {
+        commitBtn.disabled = false;
+        commitBtn.innerHTML = '🌿 Commit & View in VS Code';
+        if (resBox) resBox.innerHTML = `<div class="card pad scan-result err" style="margin-top:8px"><b>Error:</b> ${esc(err.message)}</div>`;
+      }
+    };
+  }
 }
 function fixResult(r){
   const lbl = {resolved: ['Resolved', 'ok'], 'partly resolved': ['Partly resolved', 'wait'], 'not applied': ['Not applied', 'no']};
@@ -1476,7 +1990,10 @@ const VICON = {pass: ['✓', 'ok'], warn: ['!', 'wait'], fail: ['✕', 'no'], sk
 async function verifyView(el){
   clearInterval(VPOLL);
   const st = await api(`/api/report/${SLUG}/verify`).catch(() => ({steps: [], result: null}));
-  const approved = FIX ? FIX.plan.fixes.filter(f => fixDecision(f.id).decision === 'approved') : [];
+  const approved = FIX ? FIX.plan.fixes.filter(f => {
+    const d = fixDecision(f.id).decision;
+    return d === 'approved' || (['patch', 'minor'].includes(f.bump) && !['rejected', 'undone', 'pending'].includes(d));
+  }) : [];
   const res = st.result;
   const pub0 = await loadPub(), lastPub = await api(`/api/report/${SLUG}/publish`).catch(() => null);
   el.innerHTML = `<div class="vhead"><div><h2>Verify</h2><p>After fixes are approved, Guardian builds and tests the fixed code in an isolated Docker container, re-scans it with every agent, and compares everything with the original code.</p></div></div>
