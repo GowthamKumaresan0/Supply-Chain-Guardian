@@ -60,6 +60,57 @@ def test_llm_retries_invalid_json(gemini):
     assert llm.generate_json("y") == {"a": 1}
 
 
+
+class Slow:
+    """A reply that arrives too late."""
+    def __init__(self, seconds, text='{"late": true}'):
+        self.seconds, self.text = seconds, text
+
+
+def _slow_aware(script):
+    base = fake_chat(script)
+
+    class Chat(base):
+        def invoke(self, messages):
+            nxt = script[self.model][0]
+            if isinstance(nxt, Slow):
+                script[self.model].pop(0)
+                import threading
+                threading.Event().wait(nxt.seconds)   # time.sleep is patched to a no-op by the fixture
+                return FakeMsg(nxt.text)
+            return super().invoke(messages)
+    return Chat
+
+
+def test_llm_slow_model_is_cut_off_and_next_model_answers(gemini, monkeypatch):
+    llm = gemini({})
+    monkeypatch.setattr(llm_mod, "ChatGoogleGenerativeAI",
+                        _slow_aware({"gemini-old": [Slow(3)], "gemini-new": ['{"ok": 1}']}))
+    llm.call_timeout = 1.5
+    import time as _t
+    t = _t.monotonic()
+    assert llm.generate_json("slow") == {"ok": 1}
+    assert _t.monotonic() - t < 2.5
+    assert llm.attempts[0].startswith("gemini-old: timed out") and llm.attempts[1] == "gemini-new: ok"
+
+
+def test_llm_overloaded_model_skips_to_next_without_retrying(gemini):
+    llm = gemini({"gemini-old": [Exception("503 UNAVAILABLE high demand")], "gemini-new": ['{"ok": 2}']})
+    assert llm.generate_json("busy") == {"ok": 2}
+    assert llm.attempts == ["gemini-old: overloaded (503)", "gemini-new: ok"] and llm.calls["api"] == 2
+
+
+def test_llm_total_time_budget_gives_up_so_the_scan_can_finish(gemini, monkeypatch):
+    llm = gemini({})
+    monkeypatch.setattr(llm_mod, "ChatGoogleGenerativeAI",
+                        _slow_aware({"gemini-old": [Slow(3)], "gemini-new": [Slow(3)]}))
+    llm.call_timeout, llm.total_timeout = 5, 1.5
+    import time as _t
+    t = _t.monotonic()
+    assert llm.generate_json("never") is None          # caller falls back to deterministic explanations
+    assert _t.monotonic() - t < 2.5
+    assert "budget" in llm.last_error and llm.attempts[-1].startswith("gemini-new: skipped")
+
 def test_llm_tracks_usage_and_supports_system_and_structured_output(monkeypatch, tmp_path):
     from guardian.explain import GuardianExplanation
     seen_calls = []

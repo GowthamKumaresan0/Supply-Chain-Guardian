@@ -5,6 +5,8 @@
 - retry with exponential backoff on 429 / 5xx / timeouts / malformed JSON
 - model fallback chain: GEMINI_MODEL first, then GEMINI_FALLBACK_MODELS
   (handles retired models (404), overloaded models (503) and per-model rate limits (429))
+- hard time budget: every call is cut off at GEMINI_CALL_TIMEOUT (default 45 s) and the whole
+  request at GEMINI_TOTAL_TIMEOUT (default 60 s), so a slow or overloaded model can never stall a scan
 - returns None on total failure so callers can use their deterministic fallback
 - transport: LangChain (langchain-google-genai ChatGoogleGenerativeAI) with SystemMessage,
   native Pydantic structured output (json_schema), thinking-budget control, and token
@@ -12,6 +14,7 @@
 """
 from __future__ import annotations
 
+import concurrent.futures as cf
 import hashlib
 import json
 import os
@@ -29,6 +32,9 @@ load_dotenv(ROOT / ".env")
 
 DEFAULT_MODEL = "gemini-3.5-flash"
 DEFAULT_FALLBACKS = "gemini-3.5-flash,gemini-3.1-flash-lite,gemini-flash-lite-latest"
+CALL_TIMEOUT = float(os.getenv("GEMINI_CALL_TIMEOUT", "45"))
+TOTAL_TIMEOUT = float(os.getenv("GEMINI_TOTAL_TIMEOUT", "60"))
+_POOL = cf.ThreadPoolExecutor(max_workers=4, thread_name_prefix="gemini")
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 try:  # LangChain is the preferred client; REST stays as a fallback transport
@@ -122,6 +128,9 @@ class LLM:
         self.cache = cache_dir / "llm"
         self.cache.mkdir(parents=True, exist_ok=True)
         self.max_retries = max_retries
+        self.call_timeout = CALL_TIMEOUT
+        self.total_timeout = TOTAL_TIMEOUT
+        self._deadline = float("inf")
         self.calls = {"api": 0, "cache_hits": 0, "failures": 0}
         self.usage = {"input_tokens": 0, "output_tokens": 0, "reasoning_tokens": 0,
                       "total_tokens": 0, "estimated_input_tokens": 0}
@@ -135,6 +144,26 @@ class LLM:
     def _record_usage(self, usage: dict[str, int]) -> None:
         for k in ("input_tokens", "output_tokens", "reasoning_tokens", "total_tokens"):
             self.usage[k] += int(usage.get(k) or 0)
+
+    def _remaining(self) -> float:
+        return self._deadline - time.monotonic()
+
+    def _timed(self, fn, *args):
+        """Run one API call with a hard cut-off (the client libraries' own timeouts are not reliable)."""
+        limit = min(self.call_timeout, self._remaining())
+        if limit <= 1:
+            raise TimeoutError("AI time budget used up")
+        try:
+            return _POOL.submit(fn, *args).result(timeout=limit)
+        except cf.TimeoutError:
+            raise TimeoutError(f"no answer within {limit:.0f} s") from None
+
+    def _sleep(self, seconds: float) -> bool:
+        """Back off before a retry; False when there is no time left for another attempt."""
+        if self._remaining() < seconds + 5:
+            return False
+        time.sleep(seconds)
+        return True
 
     def _thinking_kwargs(self, model: str) -> dict[str, Any]:
         """Minimise hidden reasoning tokens on extractive explanation tasks."""
@@ -153,7 +182,7 @@ class LLM:
     def _build_chat(self, model: str, temperature: float, max_output_tokens: int | None):
         base: dict[str, Any] = dict(
             model=model, google_api_key=self.key, temperature=temperature,
-            response_mime_type="application/json", max_retries=0, timeout=150,
+            response_mime_type="application/json", max_retries=0, timeout=self.call_timeout,
         )
         if max_output_tokens:
             base["max_output_tokens"] = max_output_tokens
@@ -197,7 +226,7 @@ class LLM:
             try:
                 self.calls["api"] += 1
                 if structured is not None:
-                    res = structured.invoke(messages)
+                    res = self._timed(structured.invoke, messages)
                     raw_msg = res.get("raw") if isinstance(res, dict) else None
                     usage = _extract_lc_usage(raw_msg)
                     if isinstance(res, dict) and res.get("parsing_error"):
@@ -207,7 +236,7 @@ class LLM:
                     if data is None:
                         raise ValueError("structured output returned empty response")
                 else:
-                    msg = chat.invoke(messages)
+                    msg = self._timed(chat.invoke, messages)
                     usage = _extract_lc_usage(msg)
                     text = msg.text if isinstance(msg.text, str) else msg.text()
                     data = json.loads(_strip_fences(text))
@@ -216,6 +245,10 @@ class LLM:
                 self._record_usage(usage)
                 self.attempts.append(f"{model}: ok")
                 return data, False, usage
+            except TimeoutError as e:  # slow or overloaded model: move on, don't wait again
+                self.last_error = f"{model}: {e}"
+                self.attempts.append(f"{model}: timed out ({e})")
+                return None, True, {}
             except ValueError as e:  # malformed JSON or schema validation failure: retry
                 self.last_error = f"{model} invalid JSON: {str(e)[:120]}"
             except Exception as e:  # API errors surface as exceptions carrying the HTTP status
@@ -228,13 +261,14 @@ class LLM:
                 if code in (400, 401, 403):
                     self.attempts.append(f"{model}: HTTP {code}")
                     return None, False, {}
-                if code == 503 and attempt >= 2:
+                if code == 503:  # overloaded: a lighter fallback model answers sooner than a retry
                     self.attempts.append(f"{model}: overloaded (503)")
                     return None, True, {}
             if attempt < self.max_retries:
-                time.sleep(delay + random.uniform(0, 1))
+                if not self._sleep(delay + random.uniform(0, 1)):
+                    break
                 delay *= 2
-        self.attempts.append(f"{model}: failed after {self.max_retries} attempts")
+        self.attempts.append(f"{model}: failed after {attempt} attempts")
         return None, True, {}
 
     @property
@@ -247,8 +281,8 @@ class LLM:
         for attempt in range(1, self.max_retries + 1):
             try:
                 self.calls["api"] += 1
-                r = requests.post(ENDPOINT.format(model=model), json=body, timeout=120,
-                                  headers={"x-goog-api-key": self.key})
+                r = self._timed(lambda: requests.post(ENDPOINT.format(model=model), json=body,
+                                                      timeout=self.call_timeout, headers={"x-goog-api-key": self.key}))
                 if r.status_code == 200:
                     payload = r.json()
                     usage = _extract_rest_usage(payload)
@@ -265,15 +299,20 @@ class LLM:
                 if r.status_code in (400, 401, 403):
                     self.attempts.append(f"{model}: HTTP {r.status_code}")
                     return None, False, {}  # bad key / request: other models won't help
-                if r.status_code == 503 and attempt >= 2:
+                if r.status_code == 503:
                     self.attempts.append(f"{model}: overloaded (503)")
                     return None, True, {}
+            except TimeoutError as e:
+                self.last_error = f"{model}: {e}"
+                self.attempts.append(f"{model}: timed out ({e})")
+                return None, True, {}
             except (requests.RequestException, KeyError, IndexError, ValueError) as e:
                 self.last_error = f"{model} {type(e).__name__}: {str(e)[:160]}"
             if attempt < self.max_retries:
-                time.sleep(delay + random.uniform(0, 1))
+                if not self._sleep(delay + random.uniform(0, 1)):
+                    break
                 delay *= 2
-        self.attempts.append(f"{model}: failed after {self.max_retries} attempts")
+        self.attempts.append(f"{model}: failed after {attempt} attempts")
         return None, True, {}
 
     def _cache_key(self, prompt: str, system: str, temperature: float,
@@ -326,7 +365,12 @@ class LLM:
         if system:
             body["systemInstruction"] = {"parts": [{"text": system}]}
 
+        self._deadline = time.monotonic() + self.total_timeout
         for model in self.models:
+            if self._remaining() <= 1:
+                self.attempts.append(f"{model}: skipped (AI time budget of {self.total_timeout:.0f} s used up)")
+                self.last_error = f"no answer within the {self.total_timeout:.0f} s AI time budget"
+                break
             if HAVE_LANGCHAIN:
                 data, next_model, usage = self._call_langchain(
                     model, prompt, temperature,
