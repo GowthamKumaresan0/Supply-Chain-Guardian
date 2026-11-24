@@ -30,6 +30,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from .remediation import is_selected
+
 STEPS = [
     ("prepare", "Apply approved fixes in a sandbox"),
     ("lockfile", "Check the dependency tree"),
@@ -537,10 +539,7 @@ def run_verification(target: Path, out: Path, plan: dict, decisions: dict, *, ap
              {"result": status})
 
     # same rule as apply_fixes(auto_safe=True): approved fixes, plus patch/minor fixes not rejected or undone
-    def _selected(f):
-        d = decisions.get(f["id"], {}).get("decision")
-        return d == "approved" or (f.get("bump") in ("patch", "minor") and d not in ("rejected", "undone", "pending"))
-    approved = [f for f in plan.get("fixes", []) if _selected(f)]
+    approved = [f for f in plan.get("fixes", []) if is_selected(f, decisions)]
     emit("prepare", "running", f"Applying {len(approved)} approved fix(es) to a fresh sandbox copy")
     if not approved:
         step("prepare", "fail", "No fixes are approved yet. Approve fixes in the Fixes tab first.")
