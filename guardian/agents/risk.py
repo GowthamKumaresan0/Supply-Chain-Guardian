@@ -27,8 +27,11 @@ class RiskExplainAgent(Agent):
         llm = LLM(c.cache)
         if not c.use_llm:
             llm.key = ""
+        images = state.get("images") or []
+        deployment = (f"Docker image ({', '.join(dict.fromkeys(images))}); production install excludes devDependencies"
+                      if images else "Node.js application (no Dockerfile detected); runtime vs dev scope from package.json")
         context = {"app": f"{state['inv'].app_name}@{state['inv'].app_version}", "ecosystem": "npm (Node.js)",
-                   "deployment": "Docker image; production install excludes devDependencies",
+                   "deployment": deployment,
                    "inventory": state["stats"], "changes_vs_baseline": state.get("changes") or {}}
         ai_status = explain(ranked, context, llm, top_n=c.top)
         ai_status["backend"] = llm.backend
@@ -46,7 +49,8 @@ class RiskExplainAgent(Agent):
         self.outputs = {"ranked": len(ranked), "by_level": levels, "llm_mode": ai_status["mode"],
                         "model": ai_status["model"] if ai_status["mode"] == "llm" else None,
                         "sent_to_llm": ai_status.get("sent_findings"), "api_calls": (ai_status.get("calls") or {}).get("api"),
-                        "cache_hits": (ai_status.get("calls") or {}).get("cache_hits")}
+                        "cache_hits": (ai_status.get("calls") or {}).get("cache_hits"),
+                        "token_usage": ai_status.get("token_usage") or {}}
         return {"ranked": ranked, "ai_status": ai_status}
 
     def fallback(self, state: dict) -> dict:
