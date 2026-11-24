@@ -123,7 +123,7 @@ def _remediation(target: Path, out: Path, ranked, inv) -> dict:
     A new scan invalidates the previous sandbox result and patch; reviewer decisions are kept."""
     try:
         from .remediation import plan_fixes
-        for stale in ("remediation_result.json", "remediation.patch"):
+        for stale in ("remediation_result.json", "remediation.patch", "verification.json"):
             (out / stale).unlink(missing_ok=True)
         if (out / "sandbox").exists():
             shutil.rmtree(out / "sandbox", ignore_errors=True)
