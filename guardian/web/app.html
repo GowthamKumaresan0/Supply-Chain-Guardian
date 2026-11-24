@@ -342,6 +342,46 @@ input.in:focus,select.in:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px 
 .snip .hit{background:var(--crit-soft)} .snip .hit .no{color:var(--crit);font-weight:700;background:var(--crit-soft)}
 
 /* ---------- SUSPICIOUS CHANGES: FORMAL REVIEW ---------- */
+.cs-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+.cs-head h2{font-size:26px;font-weight:800}
+.cs-head p{margin:5px 0 0;color:var(--muted)}
+.cs-live{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.cs-live i{width:8px;height:8px;border-radius:50%;background:#dc2626}
+.cs-hero-row{display:grid;grid-template-columns:minmax(0,1.55fr) repeat(4,minmax(110px,.55fr));gap:10px;margin-bottom:14px}
+.cs-hero{min-height:150px;border:0;border-radius:16px;padding:20px 22px;color:#fff;background:linear-gradient(125deg,#172554 0%,#312e81 56%,#4338ca 100%);box-shadow:0 16px 34px rgba(49,46,129,.16);position:relative;overflow:hidden}
+.cs-hero:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-110px;top:-130px;border:42px solid rgba(255,255,255,.06)}
+.cs-hero .eyebrow{color:#c7d2fe}
+.cs-hero h3{color:#fff;font-size:22px;margin:8px 0 5px}
+.cs-hero p{margin:0;color:#cbd5e1;font-size:12.5px;max-width:520px}
+.cs-hero-tags{display:flex;gap:7px;margin-top:16px;position:relative}
+.cs-hero-tags span{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);border-radius:8px;padding:5px 9px;font-size:11.5px}
+.cs-metric{min-height:150px;border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--surface);display:flex;flex-direction:column;justify-content:space-between}
+.cs-metric-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.cs-metric-head i{width:9px;height:9px;border-radius:50%;background:var(--cs-c)}
+.cs-metric strong{font-size:34px;line-height:.95;color:var(--cs-c);letter-spacing:-.04em}
+.cs-metric small{color:var(--muted);font-size:11.5px}
+.cs-toolbar{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:12px}
+.cs-toolbar input.in{flex:1;min-width:220px}
+.cs-filters{display:flex;gap:6px;flex-wrap:wrap}
+.cs-chip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.cs-chip.on{border-color:#1e293b;background:#1e293b;color:#fff}
+.cs-listcard{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.cs-listhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.cs-listhead b{font-size:13.5px}
+.cs-cases{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:10px;max-height:520px;overflow:auto}
+.cs-case{border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;background:var(--surface);transition:.15s}
+.cs-case:hover{border-color:#b9c1d4;transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.06)}
+.cs-case-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.cs-case-title{font-size:13.5px;font-weight:800;line-height:1.35}
+.cs-case-count{min-width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--line-2);font-size:11.5px;font-weight:800}
+.cs-case-meta{display:flex;align-items:center;gap:6px;margin:9px 0 8px;flex-wrap:wrap}
+.cs-bar{height:5px;border-radius:999px;background:var(--line-2);overflow:hidden}
+.cs-bar i{display:block;height:100%;width:var(--cs-width);background:var(--cs-c);border-radius:999px}
+.cs-case-foot{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--muted);font-size:11.5px}
+.cs-empty{padding:48px 20px;text-align:center;color:var(--muted)}
+@media(max-width:1050px){.cs-hero-row{grid-template-columns:repeat(4,minmax(0,1fr))}.cs-hero{grid-column:1/-1}.cs-cases{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.cs-head{align-items:flex-start}.cs-live{display:none}.cs-hero-row{grid-template-columns:repeat(2,minmax(0,1fr))}.cs-toolbar{align-items:flex-start;flex-direction:column}.cs-toolbar input.in{width:100%;flex:none}.cs-cases{grid-template-columns:1fr}.cs-hero{min-height:170px}}
+
 .sus-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}
 .sus-head h2{font-size:25px;font-weight:800}
 .sus-head p{margin:4px 0 0;color:var(--muted)}
@@ -1777,22 +1817,39 @@ function tamper(el){
     ci:f=>caseType(f)==='CI',
     hygiene:f=>['SPEC','LOCK-SHA1'].includes(caseType(f))
   };
-  let filter='all',query='',selected=null;
-  el.innerHTML=`<div class="sus-head"><div><h2>Suspicious changes</h2><p>Warning signs and tampering indicators found outside known vulnerability databases.</p></div><span class="sus-count">${T.length} findings</span></div>
-    <div class="sus-toolbar"><input class="in" id="susSearch" placeholder="Search findings"><select class="in" id="susFilter"><option value="all">All categories</option><option value="new">New since baseline</option><option value="names">Look-alike names</option><option value="tamper">Integrity and sources</option><option value="scripts">Install scripts</option><option value="build">Image build</option><option value="ci">CI/CD</option><option value="hygiene">Dependency hygiene</option></select></div>
-    <div class="sus-layout"><section class="sus-listcard"><table class="sus-table"><thead><tr><th style="width:48%">Finding</th><th style="width:18%">Category</th><th style="width:16%">Risk</th><th style="width:18%">Status</th></tr></thead><tbody id="susRows"></tbody></table></section><aside class="sus-detail" id="susDetail"></aside></div>`;
-
-  const explain=f=>{
-    const t=caseType(f),c=CASE[t]||['','', 'Supply-chain warning',''];
-    const rule=(f.evidence[0]?.source||'').match(/(DF|CI)\d{3}/)?.[0];
-    return (f.ai&&f.ai.source?.startsWith('AI')?f.ai.why_it_matters:null)||RULE_PLAIN[rule]||c[3]||'This finding requires review because it is outside the normal dependency record.';
+  let filter='all',query='';
+  const counts={
+    new:T.filter(test.new).length,
+    names:T.filter(test.names).length,
+    tamper:T.filter(test.tamper).length,
+    scripts:T.filter(test.scripts).length,
+    build:T.filter(test.build).length,
+    ci:T.filter(test.ci).length,
+    hygiene:T.filter(test.hygiene).length
   };
-  const detail=f=>{
-    if(!f){$('#susDetail').innerHTML=`<div class="sus-detail-head"><div class="eyebrow">Finding detail</div><h3>Select a finding</h3></div><div class="sus-detail-body"><div class="sus-evidence"><span class="muted small">Evidence will appear here.</span></div></div>`;return;}
-    const t=caseType(f),c=CASE[t]||['','', 'Supply-chain warning',''];
-    let visual=caseVisual(f)||`<span class="muted small">${esc(c[3]||'No visual evidence is available.')}</span>`;
-    const sev=f.risk_level||f.severity||'Medium';
-    $('#susDetail').innerHTML=`<div class="sus-detail-head"><div class="eyebrow">${esc(c[2])}</div><h3>${esc(f.title)}</h3><div class="sus-detail-meta">${badge(f)}${f.changed?'<span class="chip new">NEW</span>':''}</div></div><div class="sus-detail-body"><div class="sus-section-label">Evidence</div><div class="sus-evidence">${visual}</div><div class="sus-explanation"><div class="sus-section-label" style="margin-bottom:4px">Why it matters</div>${esc(explain(f))}</div><div class="sus-detail-foot"><span class="mono">${esc(f.location||f.component||'')}</span><span>${esc(f.evidence?.[0]?.source||'Verified evidence')}</span></div></div>`;
+  const sevCount={};
+  T.forEach(f=>{const s=(f.risk_level||f.severity||'LOW').toUpperCase();sevCount[s]=(sevCount[s]||0)+1});
+  const metrics=[
+    ['CRITICAL','Critical',sevCount.CRITICAL||0,'var(--crit)'],
+    ['HIGH','High',sevCount.HIGH||0,'var(--high)'],
+    ['MEDIUM','Medium',sevCount.MEDIUM||0,'var(--med)'],
+    ['LOW','Low',sevCount.LOW||0,'var(--low)']
+  ];
+  el.innerHTML=`<div class="cs-head"><div><h2>Security posture</h2><p>Review suspicious changes, understand their severity, and decide what to investigate first.</p></div><span class="cs-live"><i></i>${T.length} warning signs loaded</span></div>
+    <div class="cs-hero-row">
+      <section class="cs-hero"><div class="eyebrow">Supply-chain investigation</div><h3>${counts.new} change${counts.new===1?'':'s'} detected since baseline</h3><p>${counts.scripts+counts.ci+counts.build} findings involve code execution or pipeline activity. Review name integrity, install behavior, and CI changes before release.</p><div class="cs-hero-tags"><span>${counts.names} look-alikes</span><span>${counts.scripts} install scripts</span></div></section>
+      ${metrics.map(([,label,count,color])=>`<section class="cs-metric" style="--cs-c:${color}"><div class="cs-metric-head"><span>${label}</span><i></i></div><strong>${fmt(count)}</strong><small>findings</small></section>`).join('')}
+    </div>
+    <div class="cs-toolbar"><input class="in" id="csSearch" placeholder="Search suspicious change or package…"><div class="cs-filters">
+      <button class="cs-chip on" data-csfilter="all">All <b>${T.length}</b></button><button class="cs-chip" data-csfilter="new">New <b>${counts.new}</b></button><button class="cs-chip" data-csfilter="names">Names <b>${counts.names}</b></button><button class="cs-chip" data-csfilter="tamper">Tampering <b>${counts.tamper}</b></button><button class="cs-chip" data-csfilter="scripts">Install <b>${counts.scripts}</b></button><button class="cs-chip" data-csfilter="ci">CI/CD <b>${counts.ci}</b></button>
+    </div></div>
+    <section class="cs-listcard"><div class="cs-listhead"><b id="csListTitle">Suspicious changes</b><span class="small muted" id="csListCount"></span></div><div class="cs-cases" id="csCases"></div></section>`;
+
+  const openCase=f=>{
+    const t=caseType(f),c=CASE[t]||['🔎','#f1f5f9','Finding',''];
+    const rule=(f.evidence[0]?.source||'').match(/(DF|CI)\d{3}/)?.[0];
+    const why=(f.ai&&f.ai.source?.startsWith('AI')?f.ai.why_it_matters:null)||RULE_PLAIN[rule]||c[3]||'This finding requires review because it is outside the normal dependency record.';
+    openDrawer(f.component||c[2],`<div style="padding:20px"><div class="eyebrow">${esc(c[2])}</div><h3 style="font-size:18px;margin:5px 0 8px">${esc(f.title)}</h3><div style="display:flex;gap:6px;flex-wrap:wrap">${badge(f)}${f.changed?'<span class="chip new">NEW</span>':''}</div><div style="margin-top:14px">${caseVisual(f)||''}</div><div class="aiblk" style="margin-top:14px"><div class="sec-t">Why it matters</div><p style="margin:0">${esc(why)}</p></div><div class="evbox" style="margin-top:12px"><div class="sec-t">Verified evidence</div><ul>${(f.evidence||[]).map(e=>`<li><span class="src">${esc(e.source)}</span>${esc(e.detail)}</li>`).join('')}</ul></div></div>`);
   };
   const render=()=>{
     const filtered=T.filter(f=>{
@@ -1800,18 +1857,18 @@ function tamper(el){
       const hay=(f.component+' '+f.title+' '+f.location+' '+(f.vuln_ids||[]).join(' ')).toLowerCase();
       return matches&&(!query||hay.includes(query));
     }).sort((a,b)=>(b.risk_score||0)-(a.risk_score||0));
-    if(selected&&!filtered.some(f=>f.id===selected.id)) selected=filtered[0]||null;
-    if(!selected&&filtered.length) selected=filtered[0];
-    $('#susRows').innerHTML=filtered.length?filtered.map(f=>{
-      const t=caseType(f),c=CASE[t]||['','', 'Finding',''];
+    $('#csListTitle').textContent=filtered.length===1?'1 suspicious change':`${filtered.length} suspicious changes`;
+    $('#csListCount').textContent=`${filtered.length} of ${T.length}`;
+    $('#csCases').innerHTML=filtered.length?filtered.map(f=>{
+      const t=caseType(f),c=CASE[t]||['🔎','#f1f5f9','Finding',''];
       const sev=f.risk_level||f.severity||'Medium';
-      return `<tr class="sus-row ${selected?.id===f.id?'on':''}" data-susid="${esc(f.id)}"><td><div class="sus-title">${esc(f.title)}</div><div class="sus-meta mono">${esc(f.location||f.component||'')}</div></td><td><span class="sus-type">${esc(c[2])}</span></td><td><span class="badge b-${sev}">${sev}</span></td><td>${f.changed?'<span class="chip new">NEW</span>':'<span class="chip">Recorded</span>'}</td></tr>`;
-    }).join(''):`<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--muted)">No matching findings</td></tr>`;
-    $('#susRows').querySelectorAll('[data-susid]').forEach(row=>row.onclick=()=>{selected=T.find(f=>f.id===row.dataset.susid)||null;render();});
-    detail(selected);
+      const color=f.risk_level==='Critical'||f.severity==='CRITICAL'?'#dc2626':f.risk_level==='High'||f.severity==='HIGH'?'#ea580c':f.risk_level==='Medium'||f.severity==='MEDIUM'?'#ca8a04':'#2563eb';
+      return `<article class="cs-case" data-csid="${esc(f.id)}" style="--cs-c:${color};--cs-width:${Math.min(100,20+(f.risk_score||0))}%"><div class="cs-case-top"><div><div class="eyebrow">${esc(c[2])}</div><div class="cs-case-title">${esc(f.title)}</div></div><div class="cs-case-count">${f.risk_score||0}</div></div><div class="cs-case-meta"><span class="badge b-${sev}">${f.changed?'New':sev}</span><span class="chip">${esc(f.location||f.component||'Finding')}</span></div><div class="cs-bar"><i></i></div><div class="cs-case-foot"><span>${esc(f.component||'No component')}</span><b>${fmt(f.risk_score||0)} risk</b></div></article>`;
+    }).join(''):`<div class="cs-empty" style="grid-column:1/-1"><b>No matching suspicious changes</b><div class="small">Try another search or category.</div></div>`;
+    $('#csCases').querySelectorAll('[data-csid]').forEach(card=>card.onclick=()=>{const f=T.find(x=>x.id===card.dataset.csid);if(f)openCase(f)});
   };
-  $('#susSearch').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};
-  $('#susFilter').onchange=e=>{filter=e.target.value;selected=null;render()};
+  $('#csSearch').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};
+  el.querySelectorAll('[data-csfilter]').forEach(b=>b.onclick=()=>{filter=b.dataset.csfilter;el.querySelectorAll('[data-csfilter]').forEach(x=>x.classList.toggle('on',x===b));render()});
   render();
 }
 
