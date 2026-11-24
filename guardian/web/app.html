@@ -1460,8 +1460,12 @@ document.addEventListener('click', async ev => {
 });
 
 let vscSelectedId = null, vscFilter = '', fxMajorStatus = '', fxMajorSearch = '';
+let _vscListScrollTop = 0;  // persists sidebar scroll across re-renders
 
 function fixesView(el){
+  // Snapshot the sidebar scroll position before we wipe innerHTML
+  const _prevList = el.querySelector('.vsc-list');
+  if (_prevList) _vscListScrollTop = _prevList.scrollTop;
   if (!FIX || !FIX.plan) { el.innerHTML = `<div class="vhead"><div><h2>Fixes</h2><p>Run a new scan to get fix proposals.</p></div></div>`; return; }
   const P = FIX.plan, res = FIX.result;
 
@@ -1742,10 +1746,23 @@ function fixesView(el){
   `;
 
   // Attach event handlers
+  // Restore sidebar scroll position (must happen AFTER innerHTML is written)
+  const _newList = el.querySelector('.vsc-list');
+  if (_newList && _vscListScrollTop) {
+    requestAnimationFrame(() => { _newList.scrollTop = _vscListScrollTop; });
+  }
+
+  // Scroll the active item into view only when it was just changed (not on sidebar scroll)
+  if (_newList && _vscListScrollTop === 0) {
+    const activeItem = _newList.querySelector('.vsc-item.active');
+    if (activeItem) requestAnimationFrame(() => activeItem.scrollIntoView({block: 'nearest'}));
+  }
+
   el.querySelectorAll('[data-vsc-id]').forEach(item => {
     item.onclick = ev => {
       if (ev.target.closest('[data-vsc-toggle]')) return;
       vscSelectedId = item.dataset.vscId;
+      _vscListScrollTop = 0;  // let scroll-into-view handle it for newly selected item
       fixesView(el);
     };
   });
@@ -1754,6 +1771,7 @@ function fixesView(el){
   if (vscSearchIn) {
     vscSearchIn.oninput = e => {
       vscFilter = e.target.value;
+      _vscListScrollTop = 0;  // reset to top when filtering
       fixesView(el);
       const in2 = $('#vscSearch');
       if (in2) { in2.focus(); in2.selectionStart = in2.selectionEnd = in2.value.length; }
