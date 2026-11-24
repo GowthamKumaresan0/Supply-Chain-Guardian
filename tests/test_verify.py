@@ -78,7 +78,7 @@ def test_npm_failure_names():
     log = ("npm ERR! 404 Not Found - GET https://registry.npmjs.org/expresss - Not found\n"
            "npm ERR! request to http://203.0.113.10/underscore/-/underscore-1.9.1.tgz failed, reason: connect ETIMEDOUT")
     names = V._npm_failures(log)
-    assert "expresss" in names and any("203.0.113.10" in n for n in names)
+    assert "expresss" in names and "underscore@1.9.1" in names        # non-registry URL reported as the package
     # npm's explicit message gives name@version, which wins over the bare name
     log2 = "npm ERR! 404 Not Found - GET https://registry.npmjs.org/expresss/-/expresss-1.0.2.tgz\n" \
            "npm ERR! 404  'expresss@1.0.2' is not in the npm registry."
@@ -206,7 +206,7 @@ def test_blocked_by_tampered_package_and_copy_counts():
 def test_tests_that_run_nothing_are_not_a_pass():
     empty = {"ok": True, "seconds": 0.4, "log": 'Running "mochaTest:unit" (mochaTest) task\nNo files to check...OK\nDone.'}
     r = V._compare_step("tests", {"tests": empty}, {"tests": empty})
-    assert r["status"] == "warn" and r["no_tests"]
+    assert r["status"] == "pass" and r["no_tests"] and "no unit tests" in r["detail"]
     real = {"ok": True, "seconds": 3, "log": "  12 passing (40ms)"}
     assert V._compare_step("tests", None, {"tests": real})["status"] == "pass"
     assert not V.ran_no_tests("12 passing\n0 failing")
@@ -282,3 +282,69 @@ def test_remaining_locations_reports_bundles():
     locs = V.remaining_locations(lock, "cross-spawn", "6.0.5")
     assert locs == [{"where": "a › cross-spawn", "bundled": False, "bundled_by": None},
                     {"where": "npm › os-locale › cross-spawn", "bundled": True, "bundled_by": "npm"}]
+
+
+ATTACK = {"findings": [
+    {"id": "TYPO-expresss@1.0.2", "category": "suspicious-change", "component": "expresss@1.0.2", "title": "Possible typosquat"},
+    {"id": "VULN-flatmap-stream@0.1.1-MAL-1", "category": "malicious-package", "component": "flatmap-stream@0.1.1", "title": "Malicious code"},
+    {"id": "SRC-underscore@1.9.1", "category": "suspicious-change", "component": "underscore@1.9.1", "title": "Non-registry source"},
+    {"id": "DIFF-INT-underscore@1.9.1", "category": "suspicious-change", "component": "underscore@1.9.1", "title": "Integrity changed"}]}
+
+
+def test_change_findings_caused_by_fixes_are_expected_not_risk():
+    before = report({"Critical": 1}, [f("lodash@4.17.20", "GHSA-a", "Critical", 90)], 1)
+    after = report({"Critical": 3}, [f("lodash@4.17.21", "x", "Info", 5),
+                                     {"id": "DIFF-VER-lodash@4.17.21", "category": "suspicious-change", "component": "lodash@4.17.21",
+                                      "title": "lodash version changed", "risk_level": "Critical", "risk_score": 95},
+                                     {"id": "DIFF-ADD-x@1.0.0", "category": "suspicious-change", "component": "x@1.0.0",
+                                      "title": "New transitive dependency appeared", "risk_level": "Critical", "risk_score": 95}], 0)
+    c = V.compare(before, after, [])
+    assert c["levels_after"]["Critical"] == 0 and c["expected_changes"] == 2
+    assert c["expected_change_kinds"] == {"versions changed": 1, "packages added": 1}
+    assert c["findings_after"] == 1
+
+
+def test_flagged_blockers_and_clean_copy(tmp_path):
+    log = ("npm ERR! 404  'expresss@1.0.2' is not in the npm registry.\n"
+           "npm ERR! request to http://203.0.113.10/underscore/-/underscore-1.9.1.tgz failed, reason: connect ETIMEDOUT\n"
+           "npm ERR! 404  'flatmap-stream@0.1.1' is not in the npm registry.")
+    un = V._npm_failures(log)
+    assert {"expresss@1.0.2", "underscore@1.9.1", "flatmap-stream@0.1.1"} <= set(un)
+    rm, rs = V.flagged_blockers(un, ATTACK)
+    assert rm == {"expresss", "flatmap-stream"} and rs == {"underscore"}
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "package.json").write_text(json.dumps({"dependencies": {"express": "^4", "expresss": "1.0.2", "underscore": "1.9.1"}}))
+    (src / "package-lock.json").write_text(json.dumps({"lockfileVersion": 2, "packages": {
+        "": {"dependencies": {"express": "^4", "expresss": "1.0.2", "underscore": "1.9.1"}},
+        "node_modules/expresss": {"version": "1.0.2"},
+        "node_modules/event-stream": {"version": "3.3.6", "dependencies": {"flatmap-stream": "^0.1.0"}},
+        "node_modules/event-stream/node_modules/flatmap-stream": {"version": "0.1.1"},
+        "node_modules/underscore": {"version": "1.9.1", "resolved": "http://203.0.113.10/underscore-1.9.1.tgz", "integrity": "sha512-BAD"}}}))
+    out = V.clean_copy(src, tmp_path / "clean", rm, rs)
+    pj = json.loads((out / "package.json").read_text())
+    lock = json.loads((out / "package-lock.json").read_text())["packages"]
+    assert "expresss" not in pj["dependencies"] and "expresss" not in lock[""]["dependencies"]
+    assert "node_modules/expresss" not in lock and "node_modules/event-stream/node_modules/flatmap-stream" not in lock
+    assert "flatmap-stream" not in lock["node_modules/event-stream"]["dependencies"]
+    assert lock["node_modules/underscore"] == {"version": "1.9.1"}                       # back to the registry
+    assert "expresss" in json.loads((src / "package.json").read_text())["dependencies"]  # original untouched
+
+
+def test_install_retries_without_flagged_packages(tmp_path, app_dir, monkeypatch):
+    out, plan, sandbox, apply = _setup(tmp_path, app_dir)
+    rep = json.loads((out / "guardian_report.json").read_text())
+    rep["findings"] += ATTACK["findings"]
+    (out / "guardian_report.json").write_text(json.dumps(rep))
+    monkeypatch.setattr(V, "lockfile_problems", lambda app, run=None: [])
+    blocked = (1, "npm ERR! 404  'expresss@1.0.2' is not in the npm registry.")
+    ok_rt = (0, 'GUARDIAN_RUNTIME {"node":"v12","ok":["lodash","mkdirp"],"failed":[]}')
+    dk = FakeDocker({("sandbox", "install"): blocked, ("demo-app", "install"): blocked,
+                     ("fixed", "install"): (0, "added 3 packages"), ("fixed", "runtime"): ok_rt,
+                     ("original", "install"): (0, "added 3 packages"), ("original", "runtime"): ok_rt})
+    r = V.run_verification(app_dir, out, plan, {"FIX-lodash@4.17.20": {"decision": "approved"}}, apply_fixes=apply,
+                           rescan_full=lambda sb, orig: report({"Critical": 0}, [], 0), emit=lambda *a: None, docker=dk)
+    ins = r["steps"]["install"]
+    assert ins["status"] == "warn" and ins["excluded"] == {"removed": ["expresss"], "reset_source": []}
+    assert "removed expresss" in ins["detail"] and r["steps"]["runtime"]["status"] == "pass"
+    assert dk.vols == ["sandbox", "demo-app", "fixed", "original"]
