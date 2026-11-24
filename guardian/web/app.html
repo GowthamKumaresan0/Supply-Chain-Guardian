@@ -341,7 +341,38 @@ input.in:focus,select.in:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px 
 .snip .no{color:var(--faint);text-align:right;padding-right:8px;background:var(--surface-2)}
 .snip .hit{background:var(--crit-soft)} .snip .hit .no{color:var(--crit);font-weight:700;background:var(--crit-soft)}
 
-/* ---------- SUSPICIOUS CHANGES: INVESTIGATION WORKSPACE ---------- */
+/* ---------- SUSPICIOUS CHANGES: FORMAL REVIEW ---------- */
+.sus-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:14px}
+.sus-head h2{font-size:25px;font-weight:800}
+.sus-head p{margin:4px 0 0;color:var(--muted)}
+.sus-count{font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:var(--surface);white-space:nowrap}
+.sus-toolbar{display:flex;gap:8px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:10px}
+.sus-toolbar input.in{flex:1;min-width:220px}
+.sus-toolbar select.in{min-width:170px}
+.sus-layout{display:grid;grid-template-columns:minmax(420px,1.25fr) minmax(330px,.75fr);gap:12px;align-items:start}
+.sus-listcard,.sus-detail{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.sus-listcard{height:calc(100vh - 270px);min-height:470px;overflow:auto}
+.sus-table{width:100%;border-collapse:collapse;table-layout:fixed}
+.sus-table th{position:sticky;top:0;z-index:2;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--surface-2);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.sus-row{cursor:pointer;border-bottom:1px solid var(--line-2)}
+.sus-row:hover td{background:var(--surface-2)}
+.sus-row.on td{background:#f2f4ff}
+.sus-row.on td:first-child{box-shadow:inset 3px 0 0 var(--brand)}
+.sus-row td{padding:11px 12px;vertical-align:middle}
+.sus-title{font-size:12.5px;font-weight:700;line-height:1.35}
+.sus-meta{font-size:10.5px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sus-type{font-size:11px;color:var(--ink-2)}
+.sus-detail{height:calc(100vh - 270px);min-height:470px;overflow:auto}
+.sus-detail-head{padding:16px 18px;border-bottom:1px solid var(--line)}
+.sus-detail-head .eyebrow{font-size:10px}
+.sus-detail-head h3{font-size:17px;line-height:1.35;margin:5px 0 7px}
+.sus-detail-meta{display:flex;gap:6px;flex-wrap:wrap}
+.sus-detail-body{padding:16px 18px}
+.sus-section-label{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.sus-evidence{border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:12px;min-height:120px}
+.sus-explanation{margin-top:14px;border-left:3px solid var(--brand-2);padding:2px 0 2px 12px;color:var(--ink-2);font-size:12.5px}
+.sus-detail-foot{display:flex;justify-content:space-between;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line-2);font-size:11px;color:var(--muted)}
+@media(max-width:900px){.sus-layout{grid-template-columns:1fr}.sus-detail{height:auto;min-height:320px}.sus-listcard{height:auto;max-height:520px}.sus-toolbar{flex-wrap:wrap}.sus-toolbar input.in{flex:1 1 100%}.sus-toolbar select.in{flex:1}}
 .sx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
 .sx-head h2{font-size:26px;font-weight:800}
 .sx-head p{margin:5px 0 0;color:var(--muted);max-width:760px}
@@ -1734,40 +1765,8 @@ function caseVisual(f){
   if (t === 'SPEC') return `<div class="term">"${esc(f.component)}": "${esc(d.spec)}"</div>`;
   return '';
 }
-function tamperLegacy(el){
-  const T = F.filter(f => !['vulnerability','malicious-package'].includes(f.category));
-  const filters = [['all','All'],['new','🆕 New since baseline'],['names','🎭 Names'],['tamper','🔓 Tampering'],['scripts','⚡ Install scripts'],['build','🐳 Image build'],['ci','⚙️ CI/CD'],['hygiene','🧹 Hygiene']];
-  const test = {all:()=>true, new:f=>f.changed, names:f=>caseType(f)==='TYPO', tamper:f=>['DIFF-INT','DIFF-ADD','DIFF-VER','SRC','INT'].includes(caseType(f)), scripts:f=>['INSTALL','SCRIPT'].includes(caseType(f)), build:f=>caseType(f)==='DOCKER', ci:f=>caseType(f)==='CI', hygiene:f=>['SPEC','LOCK-SHA1'].includes(caseType(f))};
-  let cur = T.some(f=>f.changed) ? 'new' : 'all';
-  el.innerHTML = `<div class="vhead"><div><h2>Suspicious changes: the case files</h2><p>Problems that no vulnerability database knows about yet. Each card shows the evidence the way an investigator would.</p></div></div>
-    ${plain('Known-bad lists only catch <i>yesterday\'s</i> attacks. These are <b>warning signs of tampering</b>: a fake name, a changed seal, a secret installer, a risky build step. Click a card for the full evidence and the AI\'s reasoning.')}
-    <div class="fchips" id="cf" style="margin-bottom:16px"></div><div class="cases" id="cases"></div>`;
-  const draw = () => {
-    $('#cf').innerHTML = filters.map(([k,l]) => { const n = T.filter(test[k]).length; return n || k==='all' ? `<button class="fchip ${k===cur?'on':''}" data-k="${k}">${l} · ${n}</button>` : ''; }).join('');
-    $('#cf').querySelectorAll('.fchip').forEach(b => b.onclick = () => { cur = b.dataset.k; draw(); });
-    $('#cases').innerHTML = T.filter(test[cur]).map(f => { const t = caseType(f), c = CASE[t] || ['🔎','#f1f5f9','Finding',''];
-      const rule = (f.evidence[0]?.source.match(/(DF|CI)\d{3}/)||[])[0];
-      const pw = (f.ai && f.ai.source?.startsWith('AI') ? f.ai.why_it_matters : null) || RULE_PLAIN[rule] || c[3];
-      return `<div class="card case" data-fid="${esc(f.id)}"><div class="ch"><div class="ct" style="background:${c[1]}">${c[0]}</div><div style="flex:1;min-width:0"><div class="eyebrow">${esc(c[2])}</div><h4>${esc(f.title)}</h4></div></div>
-        <div class="cb">${caseVisual(f)}<div class="pw">${f.ai && f.ai.source?.startsWith('AI') ? '<b style="color:var(--ai)">✦ AI:</b> ' : ''}${esc(pw)}</div></div>
-        <div class="cf"><span>${badge(f)} ${f.changed?'<span class="chip new">NEW</span>':''}</span><span class="mono">${esc(f.location)}</span></div></div>`; }).join('') || '<div class="empty">Nothing in this group.</div>';
-    bindFindingLinks($('#cases'));
-  };
-  draw();
-}
-
 function tamper(el){
   const T = F.filter(f => !['vulnerability','malicious-package'].includes(f.category));
-  const groups=[
-    ['all','All signals'],
-    ['new','New since baseline'],
-    ['names','Name look-alikes'],
-    ['tamper','Tampering'],
-    ['scripts','Install scripts'],
-    ['build','Image build'],
-    ['ci','CI/CD'],
-    ['hygiene','Hygiene']
-  ];
   const test={
     all:()=>true,
     new:f=>f.changed,
@@ -1778,79 +1777,41 @@ function tamper(el){
     ci:f=>caseType(f)==='CI',
     hygiene:f=>['SPEC','LOCK-SHA1'].includes(caseType(f))
   };
-  let cur=T.some(f=>f.changed)?'new':'all',query='';
-  const counts={
-    names:T.filter(test.names).length,
-    tamper:T.filter(test.tamper).length,
-    scripts:T.filter(test.scripts).length,
-    build:T.filter(test.build).length,
-    ci:T.filter(test.ci).length,
-    hygiene:T.filter(test.hygiene).length
-  };
-  const newCount=T.filter(test.new).length;
-  const criticalCount=T.filter(f=>(f.risk_level||f.severity||'').toLowerCase()==='critical').length;
-  const breakdown=[
-    ['Names','#7c3aed',counts.names],
-    ['Tampering','#dc2626',counts.tamper],
-    ['Install scripts','#ea580c',counts.scripts],
-    ['Image build','#2563eb',counts.build],
-    ['CI/CD','#4338ca',counts.ci],
-    ['Hygiene','#64748b',counts.hygiene]
-  ];
+  let filter='all',query='',selected=null;
+  el.innerHTML=`<div class="sus-head"><div><h2>Suspicious changes</h2><p>Warning signs and tampering indicators found outside known vulnerability databases.</p></div><span class="sus-count">${T.length} findings</span></div>
+    <div class="sus-toolbar"><input class="in" id="susSearch" placeholder="Search findings"><select class="in" id="susFilter"><option value="all">All categories</option><option value="new">New since baseline</option><option value="names">Look-alike names</option><option value="tamper">Integrity and sources</option><option value="scripts">Install scripts</option><option value="build">Image build</option><option value="ci">CI/CD</option><option value="hygiene">Dependency hygiene</option></select></div>
+    <div class="sus-layout"><section class="sus-listcard"><table class="sus-table"><thead><tr><th style="width:48%">Finding</th><th style="width:18%">Category</th><th style="width:16%">Risk</th><th style="width:18%">Status</th></tr></thead><tbody id="susRows"></tbody></table></section><aside class="sus-detail" id="susDetail"></aside></div>`;
 
-  el.innerHTML=`<div class="sx-head"><div><h2>Suspicious changes</h2><p>Review warning signs that vulnerability databases do not detect, with verified evidence for every case.</p></div><span class="sx-status"><i></i>${T.length} cases to investigate</span></div>
-    <div class="sx-summary">
-      <section class="sx-hero"><div class="eyebrow">Investigation workspace</div><h3>${newCount?`${newCount} changes are new`:`${T.length} warning signs found`}</h3><p>${criticalCount?`${criticalCount} cases are critical severity.`:'Review the evidence and prioritize production-impacting changes.'} Each case links to the exact file, package path, or configuration rule.</p></section>
-      <section class="sx-count" style="--sx-c:var(--crit)"><span class="label">Total cases</span><strong>${T.length}</strong><span>non-vulnerability findings</span></section>
-      <section class="sx-count" style="--sx-c:var(--high)"><span class="label">New</span><strong>${newCount}</strong><span>since baseline</span></section>
-      <section class="sx-count" style="--sx-c:var(--brand)"><span class="label">Scripts & CI</span><strong>${counts.scripts+counts.ci}</strong><span>execution signals</span></section>
-    </div>
-    <div class="sx-toolbar"><input class="in" id="sxSearch" placeholder="Search case, package, or file…"><div class="sx-filters" id="sxFilters"></div></div>
-    <div class="sx-layout">
-      <section class="sx-list"><div class="sx-listhead"><b id="sxListTitle">Cases</b><span class="small muted" id="sxListCount"></span></div><div class="sx-cases" id="sxCases"></div></section>
-      <aside class="sx-side">
-        <section class="sx-sidecard"><h3>Threat breakdown</h3><div class="small muted">Findings by investigation category</div><div class="sx-breakdown">${breakdown.filter(([, ,n])=>n>0).map(([label,color,n])=>`<div class="sx-breakdown-row"><div><i style="background:${color}"></i><span>${label}</span></div><b>${n}</b></div>`).join('')||'<div class="small muted" style="margin-top:10px">No category findings.</div>'}</div></section>
-        <section class="sx-sidecard"><h3>Review queue</h3><div class="small muted">Highest risk first</div><div class="sx-queue" id="sxQueue"></div></section>
-      </aside>
-    </div>`;
-
-  const caseCard=f=>{
-    const t=caseType(f),c=CASE[t]||['🔎','#f1f5f9','Finding',''];
+  const explain=f=>{
+    const t=caseType(f),c=CASE[t]||['','', 'Supply-chain warning',''];
     const rule=(f.evidence[0]?.source||'').match(/(DF|CI)\d{3}/)?.[0];
-    const pw=(f.ai&&f.ai.source?.startsWith('AI')?f.ai.why_it_matters:null)||RULE_PLAIN[rule]||c[3];
-    let visual=caseVisual(f);
-    if(!visual) visual=`<div class="small muted">${esc(c[3]||'Evidence is available in the case detail.')}</div>`;
+    return (f.ai&&f.ai.source?.startsWith('AI')?f.ai.why_it_matters:null)||RULE_PLAIN[rule]||c[3]||'This finding requires review because it is outside the normal dependency record.';
+  };
+  const detail=f=>{
+    if(!f){$('#susDetail').innerHTML=`<div class="sus-detail-head"><div class="eyebrow">Finding detail</div><h3>Select a finding</h3></div><div class="sus-detail-body"><div class="sus-evidence"><span class="muted small">Evidence will appear here.</span></div></div>`;return;}
+    const t=caseType(f),c=CASE[t]||['','', 'Supply-chain warning',''];
+    let visual=caseVisual(f)||`<span class="muted small">${esc(c[3]||'No visual evidence is available.')}</span>`;
     const sev=f.risk_level||f.severity||'Medium';
-    return `<article class="sx-case" data-fid="${esc(f.id)}"><div class="sx-case-top"><div class="sx-case-icon" style="background:${c[1]}">${c[0]}</div><div class="sx-case-copy"><div class="eyebrow">${esc(c[2])}</div><h3>${esc(f.title)}</h3></div><span class="sx-risk b-${sev}">${esc(sev)}</span></div><div class="sx-case-body"><div class="sx-evidence">${visual}</div><div class="sx-case-foot"><span>${f.changed?'<span class="chip new">NEW</span>':''}</span><span class="mono">${esc(f.location||f.component||'')}</span></div></div></article>`;
+    $('#susDetail').innerHTML=`<div class="sus-detail-head"><div class="eyebrow">${esc(c[2])}</div><h3>${esc(f.title)}</h3><div class="sus-detail-meta">${badge(f)}${f.changed?'<span class="chip new">NEW</span>':''}</div></div><div class="sus-detail-body"><div class="sus-section-label">Evidence</div><div class="sus-evidence">${visual}</div><div class="sus-explanation"><div class="sus-section-label" style="margin-bottom:4px">Why it matters</div>${esc(explain(f))}</div><div class="sus-detail-foot"><span class="mono">${esc(f.location||f.component||'')}</span><span>${esc(f.evidence?.[0]?.source||'Verified evidence')}</span></div></div>`;
   };
-
   const render=()=>{
-    $('#sxFilters').innerHTML=groups.map(([k,label])=>{
-      const n=T.filter(test[k]).length;
-      return (n||k==='all')?`<button class="sx-chip ${k===cur?'on':''}" data-sxfilter="${k}">${label} · ${n}</button>`:'';
-    }).join('');
-    $('#sxFilters').querySelectorAll('[data-sxfilter]').forEach(b=>b.onclick=()=>{
-      cur=b.dataset.sxfilter;
-      el.querySelectorAll('[data-sxfilter]').forEach(x=>x.classList.toggle('on',x===b));
-      render();
-    });
     const filtered=T.filter(f=>{
-      const matchesGroup=test[cur](f);
+      const matches=test[filter](f);
       const hay=(f.component+' '+f.title+' '+f.location+' '+(f.vuln_ids||[]).join(' ')).toLowerCase();
-      return matchesGroup&&(!query||hay.includes(query));
+      return matches&&(!query||hay.includes(query));
     }).sort((a,b)=>(b.risk_score||0)-(a.risk_score||0));
-    $('#sxListTitle').textContent=groups.find(([k])=>k===cur)?.[1]||'Cases';
-    $('#sxListCount').textContent=`${filtered.length} of ${T.length}`;
-    $('#sxCases').innerHTML=filtered.length?filtered.map(caseCard).join(''):`<div class="sx-empty" style="grid-column:1/-1"><b>No matching cases</b><div class="small">Try another category or search term.</div></div>`;
-    const queue=[...T].sort((a,b)=>(b.risk_score||0)-(a.risk_score||0)).slice(0,5);
-    $('#sxQueue').innerHTML=queue.map((f,i)=>{
-      const t=caseType(f),c=CASE[t]||['🔎','#f1f5f9','Finding',''];
-      return `<div class="sx-queue-row" data-fid="${esc(f.id)}"><div class="sx-queue-rank">${i+1}</div><div><div class="mono">${esc(f.component||f.location||c[2])}</div><span>${esc(c[2])}</span></div><b class="xs">${fmt(f.risk_score||0)}</b></div>`;
-    }).join('');
-    bindFindingLinks($('#sxCases'));
-    bindFindingLinks($('#sxQueue'));
+    if(selected&&!filtered.some(f=>f.id===selected.id)) selected=filtered[0]||null;
+    if(!selected&&filtered.length) selected=filtered[0];
+    $('#susRows').innerHTML=filtered.length?filtered.map(f=>{
+      const t=caseType(f),c=CASE[t]||['','', 'Finding',''];
+      const sev=f.risk_level||f.severity||'Medium';
+      return `<tr class="sus-row ${selected?.id===f.id?'on':''}" data-susid="${esc(f.id)}"><td><div class="sus-title">${esc(f.title)}</div><div class="sus-meta mono">${esc(f.location||f.component||'')}</div></td><td><span class="sus-type">${esc(c[2])}</span></td><td><span class="badge b-${sev}">${sev}</span></td><td>${f.changed?'<span class="chip new">NEW</span>':'<span class="chip">Recorded</span>'}</td></tr>`;
+    }).join(''):`<tr><td colspan="4" style="padding:40px;text-align:center;color:var(--muted)">No matching findings</td></tr>`;
+    $('#susRows').querySelectorAll('[data-susid]').forEach(row=>row.onclick=()=>{selected=T.find(f=>f.id===row.dataset.susid)||null;render();});
+    detail(selected);
   };
-  $('#sxSearch').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};
+  $('#susSearch').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};
+  $('#susFilter').onchange=e=>{filter=e.target.value;selected=null;render()};
   render();
 }
 
