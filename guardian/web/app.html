@@ -670,28 +670,52 @@ input.in:focus,select.in:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px 
 .scan-result.warn{border-color:#fde68a;background:#fffbeb} .scan-result.err{border-color:#fecaca;background:#fff7f7}
 .degraded-bar{display:flex;gap:10px;align-items:center;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 14px;margin:0 0 16px;font-size:13px;color:#854d0e}
 /* ---------- AGENTS tab ---------- */
-.ag-flow{display:grid;grid-template-columns:1fr 24px 1.2fr 24px 1fr 24px 1fr;gap:0;align-items:stretch;margin-bottom:18px}
+.ag-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.ag-kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.ag-kpi .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.ag-kpi b{display:block;font-size:20px;font-weight:800;margin:3px 0 2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ag-kpi span{font-size:11.5px;color:var(--muted)}
+.ag-kpi.ai{background:var(--ai-soft);border-color:var(--ai-line)} .ag-kpi.ai .k,.ag-kpi.ai b{color:var(--ai)}
+.ag-kpi.ok{background:var(--ev-soft);border-color:var(--ev-line)} .ag-kpi.ok .k,.ag-kpi.ok b{color:var(--ev)}
+.ag-flow{display:grid;grid-template-columns:1fr 24px 1.25fr 24px 1fr 24px 1fr;gap:0;align-items:stretch;margin-bottom:18px}
 .ag-col{display:flex;flex-direction:column;gap:10px;justify-content:center}
-.ag-branch{display:flex;flex-direction:column;gap:4px;padding:8px;border:1px dashed var(--line);border-radius:12px}
+.ag-par{position:relative;display:flex;flex-direction:column;gap:10px;padding:10px;border:1px dashed var(--brand-2);border-radius:14px;background:rgba(238,242,255,.35)}
+.ag-par-tag{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--brand);text-align:center}
+.ag-branch{display:flex;flex-direction:column;gap:4px;padding:8px;border:1px dashed var(--line);border-radius:12px;background:var(--surface-2)}
 .ag-down{text-align:center;color:var(--faint);font-size:14px;line-height:1}
 .ag-arrow{display:grid;place-items:center;color:var(--faint);font-size:16px}
-.ag-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 14px 12px;cursor:pointer;min-width:0}
-.ag-card:hover,.ag-card.on{border-color:var(--ink)}
+.ag-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:13px 14px 12px;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s}
+.ag-card:hover{border-color:var(--brand-2)}
+.ag-card.on{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.ag-card.ai-card{border-color:var(--ai-line)} .ag-card.ai-card.on{border-color:var(--ai);box-shadow:0 0 0 3px var(--ai-soft)}
 .ag-card .h{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .ag-card .n{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em}
 .ag-card b{display:block;font-size:14px;margin:4px 0 4px}
 .ag-card p{margin:0;font-size:12.5px;color:var(--ink-2)}
-.ag-st{font-size:11px;font-weight:600;border-radius:4px;padding:1px 6px;border:1px solid var(--line);color:var(--muted)}
-.ag-st.done{color:var(--ev);border-color:var(--ev-line)} .ag-st.skipped{color:var(--muted)} .ag-st.error{color:var(--crit);border-color:#fecaca}
-.ag-llm{font-size:11px;color:var(--ink-2);border:1px dashed var(--line);border-radius:4px;padding:0 5px;margin-left:4px}
-.ag-tl{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px 14px}
-.ag-tl .row{display:grid;grid-template-columns:200px 1fr 60px;gap:10px;align-items:center;font-size:12.5px;margin:6px 0}
-.ag-tl .track{position:relative;height:12px;background:var(--line-2);border-radius:3px}
-.ag-tl .bar{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--ink)}
+.ag-st{font-size:11px;font-weight:600;border-radius:4px;padding:1px 6px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.ag-st.done{color:var(--ev);border-color:var(--ev-line);background:var(--ev-soft)} .ag-st.skipped{color:var(--muted)} .ag-st.error{color:var(--crit);border-color:#fecaca;background:var(--crit-soft)}
+.ag-llm{font-size:10.5px;font-weight:600;color:var(--ai);background:var(--ai-soft);border:1px solid var(--ai-line);border-radius:4px;padding:0 6px;margin-left:5px;vertical-align:1px}
+.ag-tl{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px 12px}
+.ag-tl .row{display:grid;grid-template-columns:195px 1fr 62px;gap:10px;align-items:center;font-size:12.5px;padding:5px 6px;border-radius:7px;cursor:pointer}
+.ag-tl .row:hover{background:var(--surface-2)} .ag-tl .row.on{background:var(--brand-soft);font-weight:600}
+.ag-tl .track{position:relative;height:12px;background:var(--line-2);border-radius:4px}
+.ag-tl .bar{position:absolute;top:0;bottom:0;border-radius:4px;background:var(--ink)}
+.ag-tl .bar.b-vulns,.ag-tl .bar.b-intel{background:var(--brand-2)}
+.ag-tl .bar.b-integrity{background:var(--teal)}
+.ag-tl .bar.b-change{background:var(--med)}
+.ag-tl .bar.b-risk{background:var(--ai)}
+.ag-tl .bar.error{background:var(--crit)}
 .ag-tl .bar.skipped{background:var(--line)}
-.ag-kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:13px}
+.ag-kv{display:grid;grid-template-columns:145px 1fr;gap:5px 12px;font-size:13px}
 .ag-kv dt{color:var(--muted)} .ag-kv dd{margin:0;word-break:break-word}
-@media (max-width:900px){.ag-flow{grid-template-columns:1fr}.ag-arrow{transform:rotate(90deg);height:20px}.ag-tl .row{grid-template-columns:110px 1fr 44px}}
+.ag-toks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0 12px}
+.ag-tok{background:#fff;border:1px solid var(--ai-line);border-radius:8px;padding:8px 10px;text-align:center}
+.ag-tok b{display:block;font-size:16px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+.ag-tok span{font-size:11px;color:var(--muted)}
+.ag-chips{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}
+.ag-mmd{white-space:pre;font-family:var(--mono);font-size:11.5px;background:#0f172a;color:#e2e8f0;border-radius:8px;padding:12px 14px;overflow:auto;max-height:240px;margin:8px 0 0;line-height:1.55}
+@media (max-width:1100px){.ag-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.ag-flow{grid-template-columns:1fr}.ag-arrow{transform:rotate(90deg);height:20px}.ag-tl .row{grid-template-columns:110px 1fr 44px}.ag-toks{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* ---------- FULL GRAPH (deptree) : scoped under .fg ---------- */
 .fg{--fg-bg:#f7f7f5;--fg-panel:#fff;--fg-ink:#111827;--fg-muted:#6b7280;--fg-faint:#a1a1aa;--fg-line:#e5e7eb;--fg-hover:#f3f4f6;--fg-sel:#eef2ff;--fg-accent:#1d4ed8;--fg-edge:#c7c9cc;
   --fg-crit:#b42318;--fg-high:#c4320a;--fg-med:#b54708;--fg-low:#175cd3;--fg-prod:#4b5563;--fg-dev:#c4c7cc;--fg-opt:#a3a3a3;--fg-img:#0e7490;--fg-ci:#64748b;--fg-root:#111827;
@@ -1557,53 +1581,104 @@ function whyBox(n){
 })();
 
 
-/* ================= AGENTS (LangGraph orchestration) ================= */
-let agSel = null;
+/* ================= AGENTS (LangGraph orchestration + LLM telemetry) ================= */
+let agSel = 'risk';
 function agentsView(el){
   const A = R.agents;
   if (!A) { el.innerHTML = `<div class="vhead"><div><h2>Agents</h2><p>This report was produced before the agent orchestrator was added. Run a new scan to see the agents at work.</p></div></div>`; return; }
+  const AI = R.ai || {};
   const by = {}; (A.agents || []).forEach(a => by[a.id] = a);
+  if (!agSel || !by[agSel]) agSel = by.risk ? 'risk' : ((A.agents || [])[0] || {}).id || null;
   const total = Math.max(A.duration_s || 0, ...(A.agents || []).map(a => (a.started_s || 0) + (a.duration_s || 0)), 0.1);
+  const sumDur = (A.agents || []).reduce((s, a) => s + (a.duration_s || 0), 0);
+  const savedS = Math.max(0, sumDur - (A.duration_s || 0));
+  const doneN = (A.agents || []).filter(a => a.status === 'done').length;
+  const skipN = (A.agents || []).filter(a => a.status === 'skipped').length;
+  const errN = (A.agents || []).filter(a => a.status === 'error').length;
+  const tok = AI.token_usage || {};
+  const hasRealTok = (tok.total_tokens || 0) > 0;
+  const explained = F.filter(f => f.ai && (f.ai.source || '').startsWith('AI inference'));
+  const invIds = explained.reduce((s, f) => s + (f.ai.unverified_ids_removed || []).length, 0);
+  const rejEv = explained.reduce((s, f) => s + (f.ai.evidence_claims_rejected || []).length, 0);
+  const barCls = a => a.status !== 'done' ? a.status : ({vulnerability:'b-vulns', intel:'b-intel', integrity:'b-integrity', change:'b-change', risk:'b-risk'}[a.id] || '');
   const card = (id, i) => { const a = by[id]; if (!a) return '';
-    return `<div class="ag-card ${agSel === id ? 'on' : ''}" data-ag="${id}"><div class="h"><span class="n">AGENT ${i}</span><span class="ag-st ${a.status}">${a.status}${a.status === 'done' ? ' · ' + a.duration_s + 's' : ''}</span></div>
-      <b>${esc(a.name)}${a.uses_llm ? '<span class="ag-llm">Gemini</span>' : ''}</b><p>${esc(a.summary || a.role)}</p></div>`; };
+    return `<div class="ag-card ${a.uses_llm ? 'ai-card' : ''} ${agSel === id ? 'on' : ''}" data-ag="${id}"><div class="h"><span class="n">AGENT ${i}</span><span class="ag-st ${a.status}">${a.status}${a.status === 'done' ? ' · ' + a.duration_s + 's' : ''}</span></div>
+      <b>${esc(a.name)}${a.uses_llm ? `<span class="ag-llm">${esc(AI.mode === 'llm' && AI.model ? AI.model : 'Gemini')}</span>` : ''}</b><p>${esc(a.summary || a.role)}</p></div>`; };
   const arrow = '<div class="ag-arrow">→</div>';
   const sel = by[agSel] || null;
-  el.innerHTML = `<div class="vhead"><div><h2>Agents</h2><p>Six agents work on every scan, coordinated by <b>${esc(A.framework)}</b>. After discovery, two branches run <b>in parallel</b>: advisories plus exploit intelligence, and supply-chain integrity. Change detection runs only when there is a baseline; the last agent ranks and explains.</p></div></div>
+  const attempts = (AI.model_attempts && AI.model_attempts.length ? AI.model_attempts : A.llm?.attempts) || [];
+  const promptMethods = AI.prompt_version && AI.prompt_version.includes('v2')
+    ? ['System/Human Split', 'Pydantic JSON Schema', 'Compact Serialization', 'Indexed Evidence Citations', 'Category Rubric', 'Thinking Budget = 0']
+    : ['Evidence-Only Grounding', 'Single-Shot Top-K Batch', 'Hallucination Guardrail'];
+  const fmtVal = v => {
+    if (typeof v === 'object' && v !== null) {
+      if (Array.isArray(v)) return v.length ? v.map(x => `<code>${esc(x)}</code>`).join(' ') : '<span class="muted">none</span>';
+      return Object.entries(v).map(([a, b]) => `${esc(a.replace(/_/g, ' '))}: <b>${esc(typeof b === 'number' ? fmt(b) : b)}</b>`).join(' · ');
+    }
+    return esc(typeof v === 'number' ? fmt(v) : v);
+  };
+  el.innerHTML = `<div class="vhead"><div><h2>Agents</h2><p>Six agents work on every scan, coordinated by <b>${esc(A.framework)}</b>. Deterministic tools run discovery, multi-source advisories, exploit intel, tampering checks, and risk scoring; only Agent 6 invokes Gemini via LangChain to explain the top findings.</p></div></div>
+    <div class="ag-kpis">
+      <div class="ag-kpi"><div class="k">Total runtime</div><b>${A.duration_s}s</b><span>${savedS >= 0.2 ? `~${savedS.toFixed(1)}s saved via parallelism` : 'LangGraph StateGraph'}</span></div>
+      <div class="ag-kpi"><div class="k">Agent status</div><b>${doneN} / ${(A.agents || []).length}</b><span>${skipN ? `${skipN} skipped` : 'all active'}${errN ? ` · <span style="color:var(--crit)">${errN} degraded</span>` : ' · 0 errors'}</span></div>
+      <div class="ag-kpi ai"><div class="k">LLM model</div><b style="font-size:15px;line-height:1.4">${esc(AI.mode === 'llm' ? AI.model : 'Fallback')}</b><span>${AI.calls ? `${AI.calls.api || 0} API · ${AI.calls.cache_hits || 0} cache · top ${AI.sent_findings || 0}` : esc(A.llm?.client || '')}</span></div>
+      <div class="ag-kpi ai"><div class="k">Token usage</div><b>${hasRealTok ? fmt(tok.total_tokens) : (AI.prompt_tokens_est ? '~' + fmt(AI.prompt_tokens_est) : '—')}</b><span>${hasRealTok ? `${fmt(tok.input_tokens)} in · ${fmt(tok.output_tokens)} out · ${fmt(tok.reasoning_tokens || 0)} think` : 'estimated input tokens'}</span></div>
+      <div class="ag-kpi ok"><div class="k">AI guardrails</div><b>${invIds === 0 && rejEv === 0 ? '100% clean' : `${invIds + rejEv} caught`}</b><span>${invIds} invented IDs · ${rejEv} bad citations · 0 score edits</span></div>
+    </div>
     <div class="ag-flow">
       <div class="ag-col">${card('discovery', 1)}</div>${arrow}
-      <div class="ag-col"><div class="ag-branch">${card('vulnerability', 2)}<div class="ag-down">↓</div>${card('intel', 3)}</div><div class="ag-branch">${card('integrity', 4)}</div></div>${arrow}
+      <div class="ag-col"><div class="ag-par"><div class="ag-par-tag">⚡ Parallel branches</div><div class="ag-branch">${card('vulnerability', 2)}<div class="ag-down">↓</div>${card('intel', 3)}</div><div class="ag-branch">${card('integrity', 4)}</div></div></div>${arrow}
       <div class="ag-col">${card('change', 5)}</div>${arrow}
       <div class="ag-col">${card('risk', 6)}</div>
     </div>
     <div class="grid g2" style="align-items:start">
       <div>
-        <div class="eyebrow" style="margin-bottom:8px">Timeline · ${A.duration_s}s total</div>
-        <div class="ag-tl">${(A.agents || []).map(a => `<div class="row"><span>${esc(a.name)}</span><span class="track"><span class="bar ${a.status}" style="left:${(100 * (a.started_s || 0) / total).toFixed(1)}%;width:${Math.max(0.6, 100 * (a.duration_s || 0) / total).toFixed(1)}%"></span></span><span class="muted" style="text-align:right">${a.status === 'skipped' ? 'skipped' : a.duration_s + 's'}</span></div>`).join('')}
-          <div class="xs muted" style="margin-top:8px">Overlapping bars ran at the same time.</div></div>
-        <div class="eyebrow" style="margin:18px 0 8px">Orchestration</div>
+        <div class="eyebrow" style="margin-bottom:8px">Execution timeline · ${A.duration_s}s total <span class="muted" style="font-weight:500;text-transform:none">(click a row to inspect)</span></div>
+        <div class="ag-tl">${(A.agents || []).map(a => `<div class="row ${agSel === a.id ? 'on' : ''}" data-ag="${a.id}"><span>${esc(a.name)}</span><span class="track"><span class="bar ${barCls(a)}" style="left:${(100 * (a.started_s || 0) / total).toFixed(1)}%;width:${Math.max(1.0, 100 * (a.duration_s || 0) / total).toFixed(1)}%"></span></span><span class="muted" style="text-align:right">${a.status === 'skipped' ? 'skipped' : a.duration_s + 's'}</span></div>`).join('')}
+          <div class="xs muted" style="margin:6px 6px 2px">Overlapping bars ran concurrently in LangGraph. Purple = Gemini LLM step.</div></div>
+
+        <div class="eyebrow" style="margin:18px 0 8px">LLM & prompt engineering</div>
+        <div class="aiblk">
+          <div class="sec-t">✦ LangChain · ${esc(AI.prompt_version || 'compact-structured')}</div>
+          <div class="ag-toks">
+            <div class="ag-tok"><b>${hasRealTok ? fmt(tok.input_tokens) : (AI.prompt_tokens_est ? '~' + fmt(AI.prompt_tokens_est) : '—')}</b><span>Input tokens</span></div>
+            <div class="ag-tok"><b>${hasRealTok ? fmt(tok.output_tokens) : '—'}</b><span>Output tokens</span></div>
+            <div class="ag-tok"><b>${hasRealTok ? fmt(tok.reasoning_tokens || 0) : '0'}</b><span>Thinking tokens</span></div>
+            <div class="ag-tok"><b>${hasRealTok ? fmt(tok.total_tokens) : '—'}</b><span>Total tokens</span></div>
+          </div>
+          <dl class="ag-kv">
+            <dt>Provider & model</dt><dd>${esc(A.llm?.provider || 'Google Gemini')} · <b>${esc(AI.mode === 'llm' ? AI.model : 'deterministic fallback')}</b></dd>
+            <dt>LangChain client</dt><dd>${esc(AI.backend || A.llm?.client || '')}</dd>
+            <dt>Findings sent</dt><dd>Top <b>${AI.sent_findings || 0}</b> of ${fmt(F.length)} (single batched call, evidence only)</dd>
+            ${attempts.length ? `<dt>Model fallback</dt><dd><div class="ag-chips">${attempts.map(x => `<span class="chip mono xs">${esc(x)}</span>`).join('')}</div></dd>` : ''}
+          </dl>
+          <div class="eyebrow" style="margin:10px 0 4px;color:var(--ai)">Active prompting techniques</div>
+          <div class="ag-chips">${promptMethods.map(m => `<span class="chip aich">${esc(m)}</span>`).join('')}</div>
+          <div class="guard"><span>Guardrails:</span><span><b>✔</b> ${invIds} invented IDs stripped</span><span><b>✔</b> ${rejEv} unsupported claims rejected</span><span><b>✔</b> scores untouched by AI</span></div>
+        </div>
+
+        <div class="eyebrow" style="margin:18px 0 8px">Orchestration & safety rules</div>
         <div class="card pad"><dl class="ag-kv">
-          <dt>Orchestrator</dt><dd>${esc(A.framework)} StateGraph with a parallel fan-out, a join and conditional routing</dd>
-          <dt>LLM</dt><dd>${esc(A.llm.provider)}${A.llm.model ? ' · <b>' + esc(A.llm.model) + '</b>' : ' · not used (deterministic fallback)'}</dd>
-          <dt>LLM client</dt><dd>${esc(A.llm.client || '')}</dd>
-          ${(A.llm.attempts || []).length ? `<dt>Model attempts</dt><dd class="mono xs">${A.llm.attempts.map(esc).join('<br>')}</dd>` : ''}
+          <dt>Orchestrator</dt><dd>${esc(A.framework)} StateGraph (parallel fan-out, join, conditional baseline route &amp; RetryPolicy)</dd>
         </dl>
-        <div class="eyebrow" style="margin:14px 0 6px">Rules every agent follows</div>
-        <ul class="small" style="margin:0;padding-left:18px">${(A.principles || []).map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>
+        <ul class="small" style="margin:10px 0 0;padding-left:18px">${(A.principles || []).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+        ${A.mermaid ? `<details style="margin-top:12px"><summary class="small" style="cursor:pointer;font-weight:600;color:var(--brand)">View LangGraph topology (Mermaid)</summary><pre class="ag-mmd">${esc(A.mermaid.trim())}</pre></details>` : ''}</div>
       </div>
       <div>
-        <div class="eyebrow" style="margin-bottom:8px">${sel ? 'Agent detail' : 'Click an agent for detail'}</div>
+        <div class="eyebrow" style="margin-bottom:8px">${sel ? 'Agent inspector' : 'Click an agent for detail'}</div>
         ${sel ? `<div class="card pad"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><h3 style="margin:0;font-size:17px">${esc(sel.name)}</h3><span class="ag-st ${sel.status}">${sel.status}</span></div>
           <p class="muted" style="margin:6px 0 12px">${esc(sel.role)}</p>
           <dl class="ag-kv"><dt>Started</dt><dd>${sel.started_s}s after scan start</dd><dt>Duration</dt><dd>${sel.duration_s}s</dd>
-          <dt>Uses LLM</dt><dd>${sel.uses_llm ? 'yes: Gemini, explanations only' : 'no: deterministic tools'}</dd>
+          ${sel.attempts ? `<dt>Attempts</dt><dd>${sel.attempts}${sel.attempts > 1 ? ' <span class="chip" style="background:var(--med-soft);color:#a16207">retried</span>' : ''}</dd>` : ''}
+          <dt>Uses LLM</dt><dd>${sel.uses_llm ? `yes: ${esc(AI.mode === 'llm' ? AI.model : 'Gemini')} (explanations only, never scores)` : 'no: 100% deterministic tools'}</dd>
           <dt>Result</dt><dd>${esc(sel.summary || '')}</dd>${sel.error ? `<dt>Error</dt><dd style="color:var(--crit)">${esc(sel.error)}</dd>` : ''}</dl>
+          ${(sel.warnings || []).length ? `<div class="degraded-bar" style="margin:12px 0 0"><b>Warnings:</b> ${sel.warnings.map(esc).join(' · ')}</div>` : ''}
           <div class="eyebrow" style="margin:14px 0 6px">Tools</div><div style="display:flex;gap:6px;flex-wrap:wrap">${(sel.tools || []).map(t => `<span class="chip">${esc(t)}</span>`).join('')}</div>
-          ${Object.keys(sel.outputs || {}).length ? `<div class="eyebrow" style="margin:14px 0 6px">Outputs</div><dl class="ag-kv">${Object.entries(sel.outputs).filter(([k,v]) => v !== null && v !== undefined).map(([k,v]) => `<dt>${esc(k.replace(/_/g,' '))}</dt><dd>${typeof v === 'object' ? (Array.isArray(v) ? (v.length ? v.map(x => `<code>${esc(x)}</code>`).join(' ') : '<span class="muted">none</span>') : Object.entries(v).map(([a,b]) => `${esc(a)}: <b>${esc(b)}</b>`).join(' · ')) : esc(typeof v === 'number' ? fmt(v) : v)}</dd>`).join('')}</dl>` : ''}
+          ${Object.keys(sel.outputs || {}).length ? `<div class="eyebrow" style="margin:14px 0 6px">Outputs</div><dl class="ag-kv">${Object.entries(sel.outputs).filter(([k,v]) => v !== null && v !== undefined && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)).map(([k,v]) => `<dt>${esc(k.replace(/_/g,' '))}</dt><dd>${fmtVal(v)}</dd>`).join('')}</dl>` : ''}
         </div>` : `<div class="card pad small muted">Each agent reads the shared scan state, calls its tools, and writes its results back. The orchestrator decides what runs next.</div>`}
       </div>
     </div>`;
-  el.querySelectorAll('[data-ag]').forEach(c => c.onclick = () => { agSel = agSel === c.dataset.ag ? null : c.dataset.ag; agentsView(el); });
+  el.querySelectorAll('[data-ag]').forEach(c => c.onclick = () => { agSel = c.dataset.ag; agentsView(el); });
 }
 
 /* ================= FIXES: proposals, human approval, sandbox apply ================= */
