@@ -21,9 +21,15 @@ def report_json(target):
             "checkpoint": {"what_is_in_the_app": {"total_components": 4, "direct": 2, "transitive": 2, "max_depth": 2,
                                                   "container_images": ["node:18"], "ci_workflows": ["ci.yml"]},
                            "what_looks_risky": {"by_risk_level": {"Critical": 1, "High": 0, "Medium": 0, "Low": 0, "Info": 0}}},
-            "findings": [{"risk_level": "Critical", "risk_score": 90, "title": "Command Injection in lodash",
-                          "component": "lodash@4.17.20", "evidence": [{"source": "OSV.dev"}]}],
-            "remediation": {"fixes": [{"id": "FIX-lodash@4.17.20"}], "skipped": []}}
+            "findings": [{"id": "VULN-lodash@4.17.20-GHSA-a", "category": "vulnerability", "risk_level": "Critical",
+                          "risk_score": 90, "title": "Command Injection in lodash", "component": "lodash@4.17.20",
+                          "vuln_ids": ["GHSA-a"], "evidence": [{"source": "OSV.dev"}]}],
+            "vulnerability_scan": {"vulnerable_packages": 1},
+            "inventory": [{"name": "lodash", "version": "4.17.20", "scope": "runtime", "direct": True, "depth": 1,
+                           "parents": 1, "install_script": False, "source": "registry.npmjs.org", "lock_path": "node_modules/lodash"}],
+            "remediation": {"fixes": [{"id": "FIX-lodash@4.17.20", "package": "lodash", "from_version": "4.17.20",
+                                       "to_version": "4.17.21", "bump": "patch", "kind": "direct", "advisories": ["GHSA-a"]}],
+                            "skipped": []}}
 
 
 VERIFICATION = {"headline": "All approved fixes are verified", "finished_at": "2026-11-24T01:00:00+00:00", "seconds": 30,
@@ -33,7 +39,7 @@ VERIFICATION = {"headline": "All approved fixes are verified", "finished_at": "2
                                "levels_after": {"Critical": 0, "High": 0, "Medium": 0, "Low": 0},
                                "findings_before": 1, "findings_after": 0, "vulnerable_packages_before": 1,
                                "vulnerable_packages_after": 0, "resolved_count": 1, "expected_changes": 2,
-                               "fixes": [{"package": "lodash", "from_version": "4.17.20", "to_version": "4.17.21",
+                               "fixes": [{"id": "FIX-lodash@4.17.20", "package": "lodash", "from_version": "4.17.20", "to_version": "4.17.21",
                                           "bump": "patch", "fixed": 1, "of": 1, "status": "fixed"}]}}
 
 
@@ -49,6 +55,12 @@ def scan(tmp_path, app_dir):
     (out / "sandbox" / "package-lock.json").write_text((app_dir / "package-lock.json").read_text())
     (out / "guardian_report.json").write_text(json.dumps(report_json(app_dir)))
     (out / "verification.json").write_text(json.dumps(VERIFICATION))
+    after = report_json(app_dir)
+    after.update(generated_at="2026-11-24T01:00:00+00:00", findings=[], vulnerability_scan={"vulnerable_packages": 0},
+                 inventory=[{**after["inventory"][0], "version": "4.17.21"}])
+    after["checkpoint"]["what_looks_risky"]["by_risk_level"] = {"Critical": 0, "High": 0, "Medium": 0, "Low": 0, "Info": 0}
+    (out / "verify").mkdir()
+    (out / "verify" / "guardian_report.json").write_text(json.dumps(after))
     (out / "approvals.json").write_text(json.dumps({"FIX-lodash@4.17.20": {"decision": "approved"}}))
     (out / "remediation.patch").write_text("--- a/package.json\n+++ b/package.json\n")
     bare = tmp_path / "remote.git"
@@ -81,14 +93,21 @@ def test_publish_two_branches(scan, tmp_path):
     # fixed is a child of original, so compare shows exactly the fix
     assert git("rev-parse", f"{r['fixed_branch']}^", cwd=bare) == git("rev-parse", r["original_branch"], cwd=bare)
     orig_files = git("ls-tree", "-r", "--name-only", r["original_branch"], cwd=bare).split()
-    assert "package.json" in orig_files and "guardian-report/REPORT.md" in orig_files
+    assert "package.json" in orig_files and "guardian-report/before/REPORT.md" in orig_files
+    assert {"guardian-report/before/findings.csv", "guardian-report/before/packages.csv",
+            "guardian-report/before/guardian_report.json"} <= set(orig_files)
     assert not any(f.startswith("node_modules/") for f in orig_files)
     changed = git("diff", "--name-only", r["original_branch"], r["fixed_branch"], cwd=bare).split()
-    assert "package.json" in changed and "guardian-report/VERIFICATION.md" in changed and "guardian-report/remediation.patch" in changed
+    assert {"package.json", "guardian-report/VERIFICATION.md", "guardian-report/remediation.patch",
+            "guardian-report/BEFORE_AFTER.md", "guardian-report/fixes.csv", "guardian-report/after/REPORT.md",
+            "guardian-report/after/findings.csv", "guardian-report/after/packages.csv"} <= set(changed)
+    assert not any(c.startswith("guardian-report/before/") for c in changed)          # the starting point is untouched
+    ba = git("show", f"{r['fixed_branch']}:guardian-report/BEFORE_AFTER.md", cwd=bare)
+    assert "## Resolved by the fixes (1)" in ba and "Command Injection in lodash" in ba and "`lodash` | 4.17.20 | 4.17.21" in ba
     assert '"^4.17.21"' in git("show", f"{r['fixed_branch']}:package.json", cwd=bare)
     assert git("log", "-1", "--format=%an <%ae>", r["fixed_branch"], cwd=bare) == "Vijay Srinivas <vijay@example.com>"
     assert "All approved fixes are verified" in git("show", f"{r['fixed_branch']}:guardian-report/VERIFICATION.md", cwd=bare)
-    assert "Command Injection in lodash" in git("show", f"{r['original_branch']}:guardian-report/REPORT.md", cwd=bare)
+    assert "Command Injection in lodash" in git("show", f"{r['original_branch']}:guardian-report/before/REPORT.md", cwd=bare)
     assert (out / "publish.json").exists() and [e[0] for e in events][-1] == "push"
 
 
@@ -120,3 +139,10 @@ def test_publish_settings_api(tmp_path, monkeypatch):
     assert c.post("/api/publish/settings", json={"repo": "ftp://x", "name": "a", "email": "a@b.co"}).status_code == 400
     ok = c.post("/api/publish/settings", json={"repo": "https://github.com/a/b", "name": "A", "email": "a@b.co"})
     assert ok.status_code == 200 and c.get("/api/publish/settings").get_json()["repo"] == "https://github.com/a/b"
+
+
+def test_publish_needs_the_rescan(scan):
+    out, bare = scan
+    (out / "verify" / "guardian_report.json").unlink()
+    with pytest.raises(FileNotFoundError):
+        P.publish(out, {"repo": f"file://{bare}", "name": "a", "email": "a@b.co"})
