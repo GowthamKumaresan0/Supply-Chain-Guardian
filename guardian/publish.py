@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 
+from .remediation import effective_decision, is_selected
 from .track import before_after_markdown, findings_csv, fixes_csv, packages_csv
 
 _URL = re.compile(r"^(https://[\w.-]+/[\w.-]+/[\w.-]+?(\.git)?/?|file:///[\w./-]+)$")  # file:// = local repo (tests)
@@ -82,10 +83,14 @@ def report_markdown(r: dict, decisions: dict | None = None) -> str:
     rem = r.get("remediation") or {}
     if rem.get("fixes"):
         d = decisions or {}
-        n = {k: sum(1 for f in rem["fixes"] if (d.get(f["id"]) or {}).get("decision", "pending") == k)
-             for k in ("approved", "rejected", "pending")}
+        n: dict[str, int] = {}
+        for f in rem["fixes"]:
+            e = effective_decision(f, d)
+            e = "rejected" if e in ("undone", "reverted") else e
+            n[e] = n.get(e, 0) + 1
         lines += ["", "## Proposed fixes", "",
-                  f"{len(rem['fixes'])} fixes proposed: {n['approved']} approved, {n['rejected']} rejected, {n['pending']} pending; "
+                  f"{len(rem['fixes'])} fixes proposed: {n.get('approved', 0)} approved, {n.get('auto-applied', 0)} auto-applied "
+                  f"(safe patch/minor), {n.get('rejected', 0)} rejected or undone, {n.get('pending', 0)} pending; "
                   f"{len(rem.get('skipped') or [])} need a manual fix."]
     lines += ["", f"Full machine-readable report: `guardian_report.json`."]
     return "\n".join(lines) + "\n"
@@ -216,8 +221,8 @@ def publish(out: Path, settings: dict, emit=lambda *a: None, run: Runner = subpr
             if (out / name).exists():
                 shutil.copy2(out / name, rep / name)
         _git([*ident, "add", "-A"], work, run)
-        approved = sum(1 for d in decisions.values() if d.get("decision") == "approved")
-        _git([*ident, "commit", "-q", "-m", f"Apply {approved} approved dependency fixes",
+        applied = sum(1 for f in plan.get("fixes", []) if is_selected(f, decisions))
+        _git([*ident, "commit", "-q", "-m", f"Apply {applied} verified dependency fixes",
               "-m", f"Verification: {verification.get('headline', '')}. "
                     f"{verification.get('fixed', 0)} of {verification.get('total', 0)} fixes confirmed by the re-scan."],
              work, run)
