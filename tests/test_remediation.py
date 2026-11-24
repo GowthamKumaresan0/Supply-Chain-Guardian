@@ -69,11 +69,11 @@ def test_decisions_keep_history(tmp_path):
 
 
 def _fake_npm(versions):
-    """Stub for npm --package-lock-only: rewrites lockfile versions."""
+    """Stub for npm --package-lock-only: sets (or re-adds pruned) lockfile entries to the given versions."""
     def run(cwd):
         lock = json.loads((cwd / "package-lock.json").read_text())
         for key, ver in versions.items():
-            lock["packages"][key]["version"] = ver
+            lock["packages"].setdefault(key, {})["version"] = ver
         (cwd / "package-lock.json").write_text(json.dumps(lock, indent=2))
         return True, "npm install --package-lock-only --ignore-scripts"
     return run
@@ -89,22 +89,22 @@ def test_apply_in_sandbox_and_verify(app_dir, tmp_path, monkeypatch):
 
     rem.record_decision(out, "FIX-lodash@4.17.20", "approved", "Asha")
     rem.record_decision(out, "FIX-minimist@1.2.0", "approved", "Asha")
-    # npm upgrades lodash but (simulated) ignores the override for minimist
-    monkeypatch.setattr(rem, "_run_npm", _fake_npm({"node_modules/lodash": "4.17.21"}))
+    # the old minimist entry is pruned first, so npm must re-resolve it with the override
+    monkeypatch.setattr(rem, "_run_npm", _fake_npm({"node_modules/lodash": "4.17.21", "node_modules/minimist": "1.2.6"}))
 
     def rescan(sandbox):
         sinv = discover(sandbox)
         installed = {}
         for c in sinv.components.values():
             installed.setdefault(c.name, []).append(c.version)
-        return {"minimist@1.2.0": ["GHSA-c"]}, installed
+        return {}, installed
 
     original = (app_dir / "package.json").read_text()
     r = rem.apply_fixes(app_dir, out, plan, rem.load_decisions(out), rescan)
-    assert r["ok"] and r["total"] == 2 and r["resolved"] == 1
+    assert r["ok"] and r["total"] == 2 and r["resolved"] == 2 and r["pruned_lock_entries"] == 1
     st = {x["package"]: x for x in r["results"]}
     assert st["lodash"]["status"] == "resolved" and st["lodash"]["installed_now"] == ["4.17.21"]
-    assert st["minimist"]["status"] == "not applied" and st["minimist"]["advisories_left"] == ["GHSA-c"]
+    assert st["minimist"]["status"] == "resolved" and st["minimist"]["installed_now"] == ["1.2.6"]
     sandbox_pj = json.loads((out / "sandbox" / "package.json").read_text())
     assert sandbox_pj["dependencies"]["lodash"] == "^4.17.21" and sandbox_pj["overrides"] == {"minimist@1.2.0": "1.2.6"}
     assert (app_dir / "package.json").read_text() == original          # original repository never changed
@@ -176,3 +176,66 @@ def test_bundled_copies_are_flagged(app_dir):
     inv = discover(app_dir)
     fx = rem.plan_fixes(app_dir, [vuln("minimist@1.2.0", "1.2.6", "GHSA-c")], inv)["fixes"][0]
     assert fx["bundled_in"] == ["mkdirp"] and "bundled inside mkdirp" in fx["why"]
+
+
+def test_bulk_decisions_and_optional_reviewer(tmp_path):
+    out = rem.record_decisions(tmp_path, ["FIX-a@1", "FIX-b@1"], "approved", bulk=True)
+    assert set(out) == {"FIX-a@1", "FIX-b@1"} and out["FIX-a@1"]["reviewer"] == "" and out["FIX-a@1"]["bulk"]
+    single = rem.record_decision(tmp_path, "FIX-a@1", "rejected", comment="breaks login")
+    assert single["reviewer"] == "" and len(single["history"]) == 2
+    assert rem.load_decisions(tmp_path)["FIX-b@1"]["decision"] == "approved"
+
+
+def test_bulk_api(report):
+    c, out = report
+    assert c.post("/api/report/demo/fixes/decisions", json={"ids": ["FIX-nope"], "decision": "approved"}).status_code == 400
+    r = c.post("/api/report/demo/fixes/decisions", json={"ids": "all", "decision": "approved", "reviewer": "Team"})
+    assert r.status_code == 200 and r.get_json()["updated"] == 1
+    st = c.get("/api/report/demo/fixes").get_json()["decisions"]
+    assert st["FIX-lodash@4.17.20"]["decision"] == "approved" and st["FIX-lodash@4.17.20"]["reviewer"] == "Team"
+    # a single decision with no reviewer and no comment is accepted
+    assert c.post("/api/report/demo/fixes/FIX-lodash@4.17.20/decision", json={"decision": "pending"}).status_code == 200
+    assert c.post("/api/report/demo/fixes/decisions", json={"ids": "all", "decision": "maybe"}).status_code == 400
+
+
+def test_bundled_copy_is_reported_not_applied(app_dir, tmp_path, monkeypatch):
+    lock = json.loads((app_dir / "package-lock.json").read_text())
+    lock["packages"]["node_modules/minimist"]["inBundle"] = True          # ships inside its parent's tarball
+    (app_dir / "package-lock.json").write_text(json.dumps(lock))
+    inv = discover(app_dir)
+    plan = rem.plan_fixes(app_dir, [vuln("minimist@1.2.0", "1.2.6", "GHSA-c", risk=70, level="High")], inv)
+    out = tmp_path / "out"
+    out.mkdir()
+    rem.record_decision(out, "FIX-minimist@1.2.0", "approved")
+    monkeypatch.setattr(rem, "_run_npm", _fake_npm({}))
+    rescan = lambda sb: ({"minimist@1.2.0": ["GHSA-c"]}, {"minimist": ["1.2.0"]})
+    r = rem.apply_fixes(app_dir, out, plan, rem.load_decisions(out), rescan)
+    x = r["results"][0]
+    assert r["pruned_lock_entries"] == 0 and x["status"] == "not applied" and "bundled" in x["note"]
+
+
+def test_prune_paths_keeps_bundled(tmp_path):
+    p = tmp_path / "package-lock.json"
+    p.write_text(json.dumps({"packages": {"node_modules/a/node_modules/x": {"version": "1"},
+                                          "node_modules/a/node_modules/x/node_modules/y": {"version": "1"},
+                                          "node_modules/b/node_modules/x": {"version": "1", "inBundle": True}}}))
+    assert rem.prune_paths(p, ["node_modules/a/node_modules/x", "node_modules/b/node_modules/x", "node_modules/none"]) == 1
+    assert list(json.loads(p.read_text())["packages"]) == ["node_modules/b/node_modules/x"]
+
+
+def test_stale_siblings_are_reresolved(app_dir, tmp_path, monkeypatch):
+    """Regression: an upgraded parent kept old siblings it no longer accepts (zaproxy › request › combined-stream)."""
+    inv = discover(app_dir)
+    plan = rem.plan_fixes(app_dir, [vuln("lodash@4.17.20", "4.17.21", "GHSA-a")], inv)
+    out = tmp_path / "out"
+    out.mkdir()
+    rem.record_decision(out, "FIX-lodash@4.17.20", "approved")
+    runs = []
+    def npm(cwd):
+        runs.append(1)
+        return _fake_npm({"node_modules/lodash": "4.17.21"})(cwd)
+    monkeypatch.setattr(rem, "_run_npm", npm)
+    rounds = iter([["node_modules/mkdirp"], []])
+    monkeypatch.setattr(rem, "invalid_lock_paths", lambda app: next(rounds))
+    r = rem.apply_fixes(app_dir, out, plan, rem.load_decisions(out), lambda sb: ({}, {"lodash": ["4.17.21"]}))
+    assert len(runs) == 2 and r["reresolve_rounds"] == 1 and r["pruned_lock_entries"] == 1
