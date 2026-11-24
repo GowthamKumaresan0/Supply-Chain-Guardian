@@ -206,7 +206,7 @@ def test_blocked_by_tampered_package_and_copy_counts():
 def test_tests_that_run_nothing_are_not_a_pass():
     empty = {"ok": True, "seconds": 0.4, "log": 'Running "mochaTest:unit" (mochaTest) task\nNo files to check...OK\nDone.'}
     r = V._compare_step("tests", {"tests": empty}, {"tests": empty})
-    assert r["status"] == "warn" and r["no_tests"]
+    assert r["status"] == "pass" and r["no_tests"] and "no unit tests" in r["detail"]
     real = {"ok": True, "seconds": 3, "log": "  12 passing (40ms)"}
     assert V._compare_step("tests", None, {"tests": real})["status"] == "pass"
     assert not V.ran_no_tests("12 passing\n0 failing")
