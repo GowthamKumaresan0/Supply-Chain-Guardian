@@ -236,6 +236,24 @@ def fix_decision(slug, fix_id):
     return jsonify(entry)
 
 
+@app.post("/api/report/<slug>/fixes/decisions")
+def fix_decisions_bulk(slug):
+    """Approve / reject / reset many fixes at once: {"ids": [...] or "all", "decision", "reviewer"?, "comment"?}."""
+    from .remediation import record_decisions
+    st = _fix_state(slug)
+    known = [f["id"] for f in st["plan"]["fixes"]]
+    body = request.get_json(silent=True) or {}
+    ids = known if body.get("ids") == "all" else [i for i in (body.get("ids") or []) if i in set(known)]
+    if not ids:
+        return jsonify({"error": "no matching fixes"}), 400
+    try:
+        out = record_decisions(st["dir"], ids, body.get("decision", ""), body.get("reviewer", ""), body.get("comment", ""),
+                               bulk=len(ids) > 1)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"updated": len(out), "decisions": out})
+
+
 @app.post("/api/report/<slug>/fixes/apply")
 def fix_apply(slug):
     from .remediation import apply_fixes

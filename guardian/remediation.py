@@ -189,16 +189,25 @@ def load_decisions(out: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
 
 
-def record_decision(out: Path, fix_id: str, decision: str, reviewer: str = "", comment: str = "") -> dict:
+def record_decisions(out: Path, fix_ids: list[str], decision: str, reviewer: str = "", comment: str = "",
+                     bulk: bool = False) -> dict:
+    """Record one decision for several fixes in a single write. Reviewer and comment are optional."""
     if decision not in ("approved", "rejected", "pending"):
         raise ValueError("decision must be approved, rejected or pending")
     d = load_decisions(out)
-    entry = {"decision": decision, "reviewer": (reviewer or "anonymous")[:80], "comment": (comment or "")[:500],
+    entry = {"decision": decision, "reviewer": (reviewer or "").strip()[:80], "comment": (comment or "").strip()[:500],
              "at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
-    history = d.get(fix_id, {}).get("history", [])
-    d[fix_id] = {**entry, "history": history + [entry]}
+    if bulk:
+        entry["bulk"] = True
+    for fid in fix_ids:
+        history = d.get(fid, {}).get("history", [])
+        d[fid] = {**entry, "history": history + [entry]}
     (out / "approvals.json").write_text(json.dumps(d, indent=2), encoding="utf-8")
-    return d[fix_id]
+    return {fid: d[fid] for fid in fix_ids}
+
+
+def record_decision(out: Path, fix_id: str, decision: str, reviewer: str = "", comment: str = "") -> dict:
+    return record_decisions(out, [fix_id], decision, reviewer, comment)[fix_id]
 
 
 # ----------------------------------------------------------------------------- sandbox apply + verify
