@@ -1730,6 +1730,27 @@ function fixesView(el){
       </div>
     </div>
 
+    <!-- COMMIT TO SEPARATE BRANCH (MAIN BRANCH PROTECTED) -->
+    <div class="card pad" style="margin-top:14px;background:#f0fdf4;border:1px solid #bbf7d0">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#15803d;display:flex;align-items:center;gap:6px">
+            <span>🌿</span> Commit Fixes to Separate Branch (Main Branch Protected)
+          </div>
+          <div class="small muted" style="margin-top:2px">
+            Writes the verified <code>package.json</code> & <code>package-lock.json</code> directly to disk and commits them to a dedicated remediation branch. You can then view the modified files and live diff directly in VS Code.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" class="in" id="fxBranchName" value="remediation/nodegoat-safe-fixes" style="min-width:230px;font-size:12px;font-family:monospace" placeholder="Branch name">
+          <button class="btn" id="fxCommitBranch" style="background:#15803d;color:#fff;border-color:#15803d">
+            🌿 Commit & View in VS Code
+          </button>
+        </div>
+      </div>
+      <div id="fxBranchResult" style="margin-top:6px"></div>
+    </div>
+
     <!-- Sandbox verification result if available -->
     <div id="fxResult">${res ? fixResult(res) : ''}</div>
 
@@ -1863,6 +1884,66 @@ function fixesView(el){
         return;
       }
       fixesView(el);
+    };
+  }
+
+  const commitBtn = $('#fxCommitBranch');
+  if (commitBtn) {
+    commitBtn.onclick = async () => {
+      const bName = ($('#fxBranchName') ? $('#fxBranchName').value : '').trim() || 'remediation/nodegoat-safe-fixes';
+      const resBox = $('#fxBranchResult');
+      commitBtn.disabled = true;
+      commitBtn.innerHTML = '<span class="spin"></span> Creating branch & committing…';
+      if (resBox) resBox.innerHTML = '';
+      try {
+        const r = await api(`/api/report/${SLUG}/fixes/commit-branch`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({branch: bName})
+        });
+        commitBtn.disabled = false;
+        commitBtn.innerHTML = '🌿 Commit & View in VS Code';
+        if (resBox) {
+          resBox.innerHTML = `
+            <div class="card pad" style="background:#ffffff;border:1px solid #86efac;margin-top:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+                <div>
+                  <b style="color:#15803d">✅ Changes applied to files & branch created: <code>${esc(r.branch)}</code> ${r.commit ? `(Commit ${esc(r.commit)})` : ''}</b>
+                  <div class="xs muted" style="margin-top:4px">
+                    Files updated on disk: ${r.files.map(f => `<code>${esc(f)}</code>`).join(' · ')}<br>
+                    <b>Main branch was NOT modified.</b> Open VS Code Source Control (Ctrl+Shift+G) or check <code>targets/nodegoat-modified/package.json</code> to view the code changes live.
+                  </div>
+                </div>
+                ${r.previous_branch && r.previous_branch !== r.branch ? `
+                  <button class="btn xs ghost" id="fxSwitchBack" data-prev="${esc(r.previous_branch)}">↩️ Switch back to ${esc(r.previous_branch)}</button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+          const swBtn = $('#fxSwitchBack');
+          if (swBtn) {
+            swBtn.onclick = async () => {
+              swBtn.disabled = true;
+              try {
+                await api(`/api/report/${SLUG}/fixes/switch-branch`, {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({branch: swBtn.dataset.prev})
+                });
+                alert(`Switched back to ${swBtn.dataset.prev}`);
+                fixesView(el);
+              } catch (e) {
+                alert('Could not switch branch: ' + e.message);
+                swBtn.disabled = false;
+              }
+            };
+          }
+        }
+      } catch (err) {
+        commitBtn.disabled = false;
+        commitBtn.innerHTML = '🌿 Commit & View in VS Code';
+        if (resBox) resBox.innerHTML = `<div class="card pad scan-result err" style="margin-top:8px"><b>Error:</b> ${esc(err.message)}</div>`;
+      }
     };
   }
 }

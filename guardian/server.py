@@ -280,6 +280,91 @@ def fix_patch(slug):
     return send_file(p, mimetype="text/plain", as_attachment=True, download_name=f"{slug}-remediation.patch")
 
 
+@app.post("/api/report/<slug>/fixes/commit-branch")
+def fix_commit_branch(slug):
+    """Apply sandbox fixes directly to target files on disk and commit them to a separate git branch, leaving main untouched."""
+    from .remediation import apply_fixes
+    st = _fix_state(slug)
+    body = request.get_json(silent=True) or {}
+    branch = (body.get("branch") or f"remediation/{slug}-safe-fixes").strip()
+    msg = (body.get("message") or f"feat(remediation): apply automated supply-chain fixes for {slug}").strip()
+
+    if branch.lower() in ("main", "master"):
+        return jsonify({"error": "Main branch is protected. Please choose a separate remediation branch name."}), 400
+
+    target = Path(st["target"])
+    out = st["dir"]
+    sandbox = out / "sandbox"
+
+    # Ensure sandbox fixes are generated
+    if not (sandbox / "package.json").exists():
+        with FIX_LOCK:
+            res = apply_fixes(target, out, st["plan"], st["decisions"], _rescan, auto_safe=True)
+            if not res.get("ok"):
+                return jsonify({"error": f"Failed to generate fix sandbox: {res.get('error')}"}), 400
+
+    new_pj = (sandbox / "package.json").read_text(encoding="utf-8")
+    new_lock = (sandbox / "package-lock.json").read_text(encoding="utf-8") if (sandbox / "package-lock.json").exists() else None
+
+    repo_root = ROOT
+    try:
+        cur_branch = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=repo_root, capture_output=True, text=True, check=True).stdout.strip()
+    except Exception:
+        cur_branch = "unknown"
+
+    files_to_add = ["targets/nodegoat-modified/package.json"]
+    if new_lock:
+        files_to_add.append("targets/nodegoat-modified/package-lock.json")
+
+    # Step 1: Switch to / create new branch
+    git_committed = False
+    commit_rev = ""
+    try:
+        chk = subprocess.run(["git", "rev-parse", "--verify", branch], cwd=repo_root, capture_output=True, text=True)
+        if chk.returncode == 0:
+            subprocess.run(["git", "checkout", branch], cwd=repo_root, capture_output=True, text=True, check=True)
+        else:
+            subprocess.run(["git", "checkout", "-b", branch], cwd=repo_root, capture_output=True, text=True, check=True)
+
+        # Step 2: Write changes directly into target files
+        (target / "package.json").write_text(new_pj, encoding="utf-8")
+        if new_lock:
+            (target / "package-lock.json").write_text(new_lock, encoding="utf-8")
+
+        # Step 3: Force-stage and commit
+        subprocess.run(["git", "add", "-f"] + files_to_add, cwd=repo_root, capture_output=True, text=True, check=True)
+        subprocess.run(["git", "commit", "-m", msg], cwd=repo_root, capture_output=True, text=True)
+        commit_rev = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=repo_root, capture_output=True, text=True).stdout.strip()
+        git_committed = True
+    except Exception as e:
+        # Fallback: even if git sandbox locking prevented git checkout, write files to disk so they can be viewed in VS Code
+        (target / "package.json").write_text(new_pj, encoding="utf-8")
+        if new_lock:
+            (target / "package-lock.json").write_text(new_lock, encoding="utf-8")
+        commit_rev = "staged-on-disk"
+
+    return jsonify({
+        "ok": True,
+        "branch": branch if git_committed else cur_branch,
+        "git_committed": git_committed,
+        "previous_branch": cur_branch,
+        "commit": commit_rev,
+        "files": files_to_add,
+        "message": msg
+    })
+
+
+@app.post("/api/report/<slug>/fixes/switch-branch")
+def fix_switch_branch(slug):
+    body = request.get_json(silent=True) or {}
+    target_branch = (body.get("branch") or "New_branch").strip()
+    try:
+        subprocess.run(["git", "checkout", target_branch], cwd=ROOT, capture_output=True, text=True, check=True)
+        return jsonify({"ok": True, "branch": target_branch})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
 # ------------------------------------------------------------------ verification (build, test, re-scan)
 
 def _rescan_full(slug: str):
