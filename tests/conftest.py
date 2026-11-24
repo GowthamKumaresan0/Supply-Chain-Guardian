@@ -142,3 +142,10 @@ def ctx_factory(tmp_path):
                           use_llm=False, use_trivy=False, use_syft=False, retry_interval=0.01, **kw)
         return ctx, events
     return make
+
+
+@pytest.fixture(autouse=True)
+def no_real_npm_ls(monkeypatch):
+    """The re-resolve loop calls `npm ls`; unit tests must not depend on the npm installed on the machine."""
+    from guardian import remediation
+    monkeypatch.setattr(remediation, "invalid_lock_paths", lambda app: [])
