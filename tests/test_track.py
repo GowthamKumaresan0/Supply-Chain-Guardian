@@ -46,7 +46,7 @@ def test_before_after_markdown_sections():
          "comparison": {"fixes": [{"id": "FIX-pkg1@1.0.0", "fixed": 1, "of": 1, "status": "fixed"}],
                         "introduced": [{"id": "N", "via": ["FIX-pkg1@1.0.0"]}]}}
     md = T.before_after_markdown(BEFORE, AFTER, v, plan, decisions)
-    for heading in ("## Summary", "## Approved fixes", "## Fixes not applied", "## Needs a manual fix",
+    for heading in ("## Summary", "## Applied fixes", "## Fixes not applied", "## Needs a manual fix",
                     "## Resolved by the fixes (200)", "## New after the fixes (1)", "## Still open after the fixes (2)",
                     "### Upgraded (200)", "### Added (1)", "### Removed (1)"):
         assert heading in md, heading
@@ -74,3 +74,23 @@ def test_resolved_and_new_count_vulnerabilities_like_verify():
     after = rep([], [])
     d = T.diff_reports(before, after)
     assert [f["id"] for f in d["resolved"]] == ["V"] and [f["id"] for f in d["other_resolved"]] == ["HEALTH-x"]
+
+
+def test_auto_applied_fixes_count_as_applied():
+    """Patch/minor fixes nobody touched are auto-applied, so the report and CSV must show them as applied."""
+    from guardian.remediation import effective_decision, is_selected
+    mk = lambda pkg, bump: {"id": f"FIX-{pkg}@1", "package": pkg, "from_version": "1", "to_version": "1.1",
+                            "bump": bump, "kind": "override", "advisories": ["A"]}
+    plan = {"fixes": [mk("auto", "minor"), mk("undone", "patch"), mk("major", "major"), mk("ok", "major")], "skipped": []}
+    decisions = {"FIX-undone@1": {"decision": "undone"}, "FIX-ok@1": {"decision": "approved", "reviewer": "Asha"}}
+    eff = {f["package"]: effective_decision(f, decisions) for f in plan["fixes"]}
+    assert eff == {"auto": "auto-applied", "undone": "undone", "major": "pending", "ok": "approved"}
+    assert [f["package"] for f in plan["fixes"] if is_selected(f, decisions)] == ["auto", "ok"]
+    assert [f["package"] for f in plan["fixes"] if is_selected(f, decisions, auto_safe=False)] == ["ok"]
+    md = T.before_after_markdown(BEFORE, AFTER, None, plan, decisions)
+    applied = md.split("## Applied fixes")[1].split("## Fixes not applied")[0]
+    assert "2 fixes went into the fixed code: 1 approved by a reviewer, 1 safe patch/minor updates applied automatically." in applied
+    assert "| `auto` |" in applied and "Guardian (automated)" in applied and "| `ok` |" in applied
+    assert "| `undone` |" not in applied and "| `major` |" not in applied
+    rows = {r["package"]: r["decision"] for r in csv.DictReader(io.StringIO(T.fixes_csv(plan, decisions, None)))}
+    assert rows == {"auto": "auto-applied", "undone": "undone", "major": "pending", "ok": "approved"}

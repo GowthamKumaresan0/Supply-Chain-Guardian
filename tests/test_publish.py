@@ -146,3 +146,11 @@ def test_publish_needs_the_rescan(scan):
     (out / "verify" / "guardian_report.json").unlink()
     with pytest.raises(FileNotFoundError):
         P.publish(out, {"repo": f"file://{bare}", "name": "a", "email": "a@b.co"})
+
+
+def test_report_counts_auto_applied_fixes(app_dir):
+    rem = {"fixes": [{"id": "A", "bump": "patch"}, {"id": "B", "bump": "minor"}, {"id": "C", "bump": "major"},
+                     {"id": "D", "bump": "major"}, {"id": "E", "bump": "patch"}], "skipped": []}
+    r = {**report_json(app_dir), "remediation": rem}
+    md = P.report_markdown(r, {"C": {"decision": "approved"}, "E": {"decision": "undone"}})
+    assert "5 fixes proposed: 1 approved, 2 auto-applied (safe patch/minor), 1 rejected or undone, 1 pending" in md

@@ -8,6 +8,8 @@ from __future__ import annotations
 import csv
 import io
 
+from .remediation import effective_decision, is_selected
+
 LEVELS = ("Critical", "High", "Medium", "Low", "Info")
 VULN = ("vulnerability", "malicious-package")
 
@@ -47,7 +49,7 @@ def fixes_csv(plan: dict, decisions: dict, verification: dict | None) -> str:
     for f in plan.get("fixes", []):
         d, v = decisions.get(f["id"]) or {}, vf.get(f["id"]) or {}
         rows.append([f["id"], f["package"], f["from_version"], f["to_version"], f["bump"], f["kind"],
-                     " ".join(f.get("advisories", [])), d.get("decision", "pending"), d.get("reviewer", ""), d.get("at", ""),
+                     " ".join(f.get("advisories", [])), effective_decision(f, decisions), d.get("reviewer", ""), d.get("at", ""),
                      d.get("comment", ""), v.get("status", ""), f"{v['fixed']}/{v['of']}" if v else "", v.get("reason", "")])
     return _csv(["fix", "package", "from", "to", "update", "kind", "advisories", "decision", "reviewer", "decided_at",
                  "comment", "verified_result", "advisories_fixed", "reason"], rows)
@@ -111,15 +113,17 @@ def before_after_markdown(before: dict, after: dict, verification: dict | None, 
     via = {f["id"]: f.get("via", []) for f in cmp.get("introduced", []) if f.get("id")}
     vf = {f["id"]: f for f in cmp.get("fixes", []) if f.get("id")}
     t = before["target"]
-    dec = lambda fid: (decisions.get(fid) or {}).get("decision", "pending")
-    approved = [f for f in plan.get("fixes", []) if dec(f["id"]) == "approved"]
-    others = [f for f in plan.get("fixes", []) if dec(f["id"]) != "approved"]
+    eff = {f["id"]: effective_decision(f, decisions) for f in plan.get("fixes", [])}
+    dec = lambda fid: eff.get(fid, "pending")
+    approved = [f for f in plan.get("fixes", []) if is_selected(f, decisions)]
+    others = [f for f in plan.get("fixes", []) if not is_selected(f, decisions)]
+    n_auto = sum(1 for f in approved if dec(f["id"]) == "auto-applied")
     pct = lambda b, a: f"{'▼' if a < b else '▲' if a > b else '±'} {abs(a - b)}" + (f" ({round(abs(a - b) * 100 / b)}%)" if b else "")
 
     out = [f"# Before / after: {t['name']}@{t.get('version', '')}", "",
            f"- Source: {t.get('upstream') or t.get('path')}" + (f" @ `{t['commit']}`" if t.get("commit") else ""),
            f"- Original scan: {before['generated_at']} · re-scan of the fixed code: {after['generated_at']}",
-           f"- Verdict: **{v.get('headline', 'not verified')}**" + (f" ({v.get('fixed', 0)} of {v.get('total', 0)} approved fixes confirmed)" if v else ""),
+           f"- Verdict: **{v.get('headline', 'not verified')}**" + (f" ({v.get('fixed', 0)} of {v.get('total', 0)} applied fixes confirmed)" if v else ""),
            "", "## Summary", "", _row(["", "Before", "After", "Change"]), _row(["---"] * 4)]
     for k in LEVELS:
         out.append(_row([k, d["levels_before"][k], d["levels_after"][k], pct(d["levels_before"][k], d["levels_after"][k])]))
@@ -133,16 +137,20 @@ def before_after_markdown(before: dict, after: dict, verification: dict | None, 
             f"- Expected changes made by the fixes themselves (not counted as risk): {len(d['expected'])}",
             f"- Packages upgraded: {len(d['upgraded'])} · added: {len(d['added'])} · removed: {len(d['removed'])}", ""]
 
-    out += ["## Approved fixes", "", _row(["Package", "Change", "Update", "Kind", "Advisories fixed", "Result", "Reviewer", "Decided"]),
-            _row(["---"] * 8)]
+    out += ["## Applied fixes", "",
+            f"{len(approved)} fixes went into the fixed code: {len(approved) - n_auto} approved by a reviewer, "
+            f"{n_auto} safe patch/minor updates applied automatically.", "",
+            _row(["Package", "Change", "Update", "Kind", "Decision", "Advisories fixed", "Result", "Reviewer", "Decided"]),
+            _row(["---"] * 9)]
     order = {"not fixed": 0, "partly fixed": 1, "fixed": 2}
     for f in sorted(approved, key=lambda f: (order.get(vf.get(f["id"], {}).get("status"), 3), f["package"])):
         r, dd = vf.get(f["id"], {}), decisions.get(f["id"]) or {}
-        out.append(_row([f"`{f['package']}`", f"{f['from_version']} → {f['to_version']}", f["bump"], f["kind"],
+        out.append(_row([f"`{f['package']}`", f"{f['from_version']} → {f['to_version']}", f["bump"], f["kind"], dec(f["id"]),
                          f"{r['fixed']} / {r['of']}" if r else "", (r.get("status", "") + (f": {r['reason']}" if r.get("reason") else "")),
-                         dd.get("reviewer", "") or "-", (dd.get("at") or "")[:16].replace("T", " ")]))
+                         dd.get("reviewer", "") or ("Guardian (automated)" if dec(f["id"]) == "auto-applied" else "-"),
+                         (dd.get("at") or "")[:16].replace("T", " ")]))
     if others:
-        out += ["", "## Fixes not applied (rejected or pending)", "", _row(["Package", "Change", "Update", "Decision", "Reviewer", "Comment"]),
+        out += ["", "## Fixes not applied (rejected, undone or pending)", "", _row(["Package", "Change", "Update", "Decision", "Reviewer", "Comment"]),
                 _row(["---"] * 6)]
         for f in sorted(others, key=lambda f: (dec(f["id"]), f["package"])):
             dd = decisions.get(f["id"]) or {}

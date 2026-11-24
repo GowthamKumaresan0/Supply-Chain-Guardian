@@ -281,18 +281,32 @@ def prune_overridden(lock_path: Path, fixes: list[dict]) -> int:
     return len(drop)
 
 
+NOT_APPLIED = ("rejected", "undone", "reverted", "pending")
+
+
+def effective_decision(fix: dict, decisions: dict) -> str:
+    """The decision that actually applies to a fix. Patch and minor updates are applied automatically
+    unless someone rejected or undid them; major updates need an explicit approval."""
+    d = (decisions.get(fix["id"]) or {}).get("decision")
+    if d == "approved":
+        return "approved"
+    if fix.get("bump") in ("patch", "minor") and d not in NOT_APPLIED:
+        return "auto-applied"
+    return d or "pending"
+
+
+def is_selected(fix: dict, decisions: dict, auto_safe: bool = True) -> bool:
+    """True when the fix goes into the fixed code (same rule for apply, verify, report and publish)."""
+    e = effective_decision(fix, decisions)
+    return e == "approved" or (auto_safe and e == "auto-applied")
+
+
 def apply_fixes(target: Path, out: Path, plan: dict, decisions: dict, rescan, auto_safe: bool = False) -> dict:
     """Apply approved fixes in out/sandbox, regenerate the lockfile, re-scan, write remediation.patch.
 
     `rescan(sandbox) -> {"name@version": [advisory ids]}` and `versions(sandbox)` come from the caller,
     so this module stays free of network code (and is easy to test)."""
-    approved = []
-    for f in plan.get("fixes", []):
-        d = decisions.get(f["id"], {}).get("decision")
-        if d == "approved":
-            approved.append(f)
-        elif auto_safe and f.get("bump") in ("patch", "minor") and d not in ("rejected", "undone", "pending"):
-            approved.append(f)
+    approved = [f for f in plan.get("fixes", []) if is_selected(f, decisions, auto_safe)]
     if not approved:
         return {"ok": False, "error": "No fixes are approved yet."}
     sandbox = out / "sandbox"
