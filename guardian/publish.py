@@ -1,8 +1,12 @@
 """Publish a verified remediation to a Git repository as two branches.
 
-  <prefix>/<repo>-<timestamp>-original   the scanned code + the final Guardian report
+  <prefix>/<repo>-<timestamp>-original   the scanned code + guardian-report/before/
   <prefix>/<repo>-<timestamp>-fixed      built ON TOP of -original: the fixed package.json / lockfile
-                                         + the verification report, decisions log and patch
+                                         + guardian-report/after/, BEFORE_AFTER.md, fixes.csv,
+                                           VERIFICATION.md, the decisions log and the patch
+
+before/ and after/ each hold REPORT.md, findings.csv, packages.csv, the full JSON report, the SBOM and the
+dependency graph, so every remediation keeps a complete, diffable record.
 
 Because the fixed branch is a child of the original branch, the repository's compare view shows exactly
 the fix. Every publish uses new branch names, so nothing that already exists on the remote is overwritten.
@@ -20,6 +24,8 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
+
+from .track import before_after_markdown, findings_csv, fixes_csv, packages_csv
 
 _URL = re.compile(r"^(https://[\w.-]+/[\w.-]+/[\w.-]+?(\.git)?/?|file:///[\w./-]+)$")  # file:// = local repo (tests)
 _EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
@@ -147,6 +153,18 @@ def _copy_code(src: Path, dst: Path) -> None:
             shutil.copy2(item, target)
 
 
+def _write_snapshot(folder: Path, report: dict, src: Path, decisions: dict) -> None:
+    """REPORT.md + CSVs + raw JSON/SBOM/graph for one state of the code (before or after the fixes)."""
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "REPORT.md").write_text(report_markdown(report, decisions), encoding="utf-8")
+    (folder / "findings.csv").write_text(findings_csv(report), encoding="utf-8")
+    (folder / "packages.csv").write_text(packages_csv(report), encoding="utf-8")
+    (folder / "guardian_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    for name in ("sbom.cdx.json", "deptree_graph.json"):
+        if (src / name).exists():
+            shutil.copy2(src / name, folder / name)
+
+
 def publish(out: Path, settings: dict, emit=lambda *a: None, run: Runner = subprocess.run,
             now: datetime | None = None) -> dict:
     """Create and push the -original and -fixed branches. Needs a finished verification (sandbox present)."""
@@ -156,6 +174,10 @@ def publish(out: Path, settings: dict, emit=lambda *a: None, run: Runner = subpr
     if not vpath.exists() or not sandbox.exists():
         raise FileNotFoundError("Run Verify first: publishing needs the verified fixed code.")
     verification = json.loads(vpath.read_text(encoding="utf-8"))
+    after_dir = out / "verify"
+    if not (after_dir / "guardian_report.json").exists():
+        raise FileNotFoundError("The re-scan of the fixed code is missing: run Verify again, then publish.")
+    after = json.loads((after_dir / "guardian_report.json").read_text(encoding="utf-8"))
     decisions = json.loads((out / "approvals.json").read_text(encoding="utf-8")) if (out / "approvals.json").exists() else {}
     target = Path(report["target"]["path"])
     slug = re.sub(r"[^\w.-]+", "-", report["target"].get("slug") or target.name).strip("-")
@@ -171,12 +193,7 @@ def publish(out: Path, settings: dict, emit=lambda *a: None, run: Runner = subpr
         _git(["init", "-q", "-b", b_orig], work, run)
         _copy_code(target, work)
         rep = work / "guardian-report"
-        rep.mkdir(exist_ok=True)
-        (rep / "REPORT.md").write_text(report_markdown(report, decisions), encoding="utf-8")
-        shutil.copy2(out / "guardian_report.json", rep / "guardian_report.json")
-        for name in ("sbom.cdx.json", "deptree_graph.json"):
-            if (out / name).exists():
-                shutil.copy2(out / name, rep / name)
+        _write_snapshot(rep / "before", report, out, decisions)
         _git([*ident, "add", "-A"], work, run)
         n_find = len(report["findings"])
         _git([*ident, "commit", "-q", "-m", f"Original code of {report['target']['name']} with the Guardian report",
@@ -189,6 +206,10 @@ def publish(out: Path, settings: dict, emit=lambda *a: None, run: Runner = subpr
         for name in ("package.json", "package-lock.json"):
             if (sandbox / name).exists():
                 shutil.copy2(sandbox / name, work / name)
+        _write_snapshot(rep / "after", after, after_dir, decisions)
+        plan = report.get("remediation") or {"fixes": [], "skipped": []}
+        (rep / "BEFORE_AFTER.md").write_text(before_after_markdown(report, after, verification, plan, decisions), encoding="utf-8")
+        (rep / "fixes.csv").write_text(fixes_csv(plan, decisions, verification), encoding="utf-8")
         (rep / "VERIFICATION.md").write_text(verification_markdown(verification), encoding="utf-8")
         shutil.copy2(vpath, rep / "verification.json")
         for name in ("remediation.patch", "approvals.json", "remediation_result.json"):
