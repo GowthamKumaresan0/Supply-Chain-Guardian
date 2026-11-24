@@ -227,6 +227,60 @@ def _run_npm(cwd: Path) -> tuple[bool, str]:
     return False, "npm could not regenerate the lockfile: " + " | ".join(tail)
 
 
+def invalid_lock_paths(app: Path) -> list[str]:
+    """Lockfile keys that `npm ls` reports as invalid (installed version does not satisfy what its parent needs)."""
+    npm = shutil.which("npm")
+    if not npm:
+        return []
+    p = subprocess.run([npm, "ls", "--all", "--json", "--package-lock-only", "--prefix", str(app)],
+                       capture_output=True, text=True, timeout=300)
+    try:
+        probs = json.loads(p.stdout or "{}").get("problems", []) or []
+    except ValueError:
+        return []
+    root = str(app.resolve()) + "/"
+    out = []
+    for pr in probs:
+        m = re.match(r"invalid: \S+ (\S+)", pr)
+        if m:
+            out.append(m.group(1).replace(root, "").replace(str(app) + "/", ""))
+    return sorted(set(out))
+
+
+def prune_paths(lock_path: Path, keys: list[str]) -> int:
+    """Remove lockfile entries (and their nested children) so npm resolves them again; bundled copies are kept."""
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    pkgs = lock.get("packages") or {}
+    drop = [k for k in keys if k in pkgs and not pkgs[k].get("inBundle")]
+    for k in drop:
+        for child in [c for c in pkgs if c == k or c.startswith(k + "/node_modules/")]:
+            pkgs.pop(child, None)
+    if drop:
+        lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+    return len(drop)
+
+
+def prune_overridden(lock_path: Path, fixes: list[dict]) -> int:
+    """Remove lockfile entries that an approved override replaces (and their nested children).
+
+    `npm install --package-lock-only` keeps existing nested entries, so without this an override such as
+    "tmp@0.1.0": "0.2.6" can be silently ignored for copies under another package. Bundled copies are kept:
+    they ship inside their parent's tarball and cannot be changed."""
+    if not lock_path.exists():
+        return 0
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    pkgs = lock.get("packages") or {}
+    targets = {(f["package"], f["from_version"]) for f in fixes if f.get("kind") == "override"}
+    drop = [k for k, v in pkgs.items() if k and not v.get("inBundle")
+            and (k.rsplit("node_modules/", 1)[-1], v.get("version")) in targets]
+    for k in drop:
+        for child in [c for c in pkgs if c == k or c.startswith(k + "/node_modules/")]:
+            pkgs.pop(child, None)
+    if drop:
+        lock_path.write_text(json.dumps(lock, indent=2) + "\n", encoding="utf-8")
+    return len(drop)
+
+
 def apply_fixes(target: Path, out: Path, plan: dict, decisions: dict, rescan) -> dict:
     """Apply approved fixes in out/sandbox, regenerate the lockfile, re-scan, write remediation.patch.
 
@@ -244,9 +298,21 @@ def apply_fixes(target: Path, out: Path, plan: dict, decisions: dict, rescan) ->
     lock_old = (target / "package-lock.json").read_text(encoding="utf-8") if (target / "package-lock.json").exists() else ""
     pj_new = _dump(apply_to_manifest(json.loads(pj_old), approved), _indent_of(pj_old))
     (sandbox / "package.json").write_text(pj_new, encoding="utf-8")
+    pruned = prune_overridden(sandbox / "package-lock.json", approved)
     ok, how = _run_npm(sandbox)
     if not ok:
         return {"ok": False, "error": how, "approved": [f["id"] for f in approved]}
+    # npm's lockfile-only mode keeps old siblings that an upgraded parent no longer accepts: re-resolve them
+    rounds = 0
+    for rounds in range(1, 4):
+        stale = invalid_lock_paths(sandbox)
+        if not stale or not prune_paths(sandbox / "package-lock.json", stale):
+            rounds -= 1
+            break
+        pruned += len(stale)
+        ok, how = _run_npm(sandbox)
+        if not ok:
+            return {"ok": False, "error": how, "approved": [f["id"] for f in approved]}
     lock_new = (sandbox / "package-lock.json").read_text(encoding="utf-8")
 
     remaining, installed = rescan(sandbox)
@@ -275,6 +341,7 @@ def apply_fixes(target: Path, out: Path, plan: dict, decisions: dict, rescan) ->
               "lockfile_command": how, "sandbox": str(sandbox), "results": results,
               "resolved": sum(r["status"] == "resolved" for r in results), "total": len(results),
               "package_json_diff": side_by_side(pj_old, pj_new), "patch_file": "remediation.patch",
+              "pruned_lock_entries": pruned, "reresolve_rounds": max(rounds, 0),
               "patch_lines": patch.count("\n")}
     (out / "remediation_result.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     return result
