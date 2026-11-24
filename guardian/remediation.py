@@ -192,7 +192,7 @@ def load_decisions(out: Path) -> dict:
 def record_decisions(out: Path, fix_ids: list[str], decision: str, reviewer: str = "", comment: str = "",
                      bulk: bool = False) -> dict:
     """Record one decision for several fixes in a single write. Reviewer and comment are optional."""
-    if decision not in ("approved", "rejected", "pending"):
+    if decision not in ("approved", "rejected", "pending", "undone", "reverted", "auto-applied"):
         raise ValueError("decision must be approved, rejected or pending")
     d = load_decisions(out)
     entry = {"decision": decision, "reviewer": (reviewer or "").strip()[:80], "comment": (comment or "").strip()[:500],
@@ -281,12 +281,18 @@ def prune_overridden(lock_path: Path, fixes: list[dict]) -> int:
     return len(drop)
 
 
-def apply_fixes(target: Path, out: Path, plan: dict, decisions: dict, rescan) -> dict:
+def apply_fixes(target: Path, out: Path, plan: dict, decisions: dict, rescan, auto_safe: bool = False) -> dict:
     """Apply approved fixes in out/sandbox, regenerate the lockfile, re-scan, write remediation.patch.
 
     `rescan(sandbox) -> {"name@version": [advisory ids]}` and `versions(sandbox)` come from the caller,
     so this module stays free of network code (and is easy to test)."""
-    approved = [f for f in plan.get("fixes", []) if decisions.get(f["id"], {}).get("decision") == "approved"]
+    approved = []
+    for f in plan.get("fixes", []):
+        d = decisions.get(f["id"], {}).get("decision")
+        if d == "approved":
+            approved.append(f)
+        elif auto_safe and f.get("bump") in ("patch", "minor") and d not in ("rejected", "undone", "pending"):
+            approved.append(f)
     if not approved:
         return {"ok": False, "error": "No fixes are approved yet."}
     sandbox = out / "sandbox"

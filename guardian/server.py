@@ -261,7 +261,9 @@ def fix_apply(slug):
     if not FIX_LOCK.acquire(blocking=False):
         return jsonify({"error": "Fixes are already being applied. Please wait."}), 409
     try:
-        result = apply_fixes(Path(st["target"]), st["dir"], st["plan"], st["decisions"], _rescan)
+        body = request.get_json(silent=True) or {}
+        auto_safe = body.get("auto_safe", True)
+        result = apply_fixes(Path(st["target"]), st["dir"], st["plan"], st["decisions"], _rescan, auto_safe=auto_safe)
     except Exception as e:
         traceback.print_exc()
         result = {"ok": False, "error": friendly_error(e)}
@@ -301,7 +303,7 @@ def _run_verify(job: dict, slug: str) -> None:
         with SCAN_LOCK:
             st = _fix_state(slug)
             res = run_verification(Path(st["target"]), st["dir"], st["plan"], st["decisions"],
-                                   apply_fixes=lambda t, o, p, d: apply_fixes(t, o, p, d, _rescan),
+                                   apply_fixes=lambda t, o, p, d: apply_fixes(t, o, p, d, _rescan, auto_safe=True),
                                    rescan_full=_rescan_full(slug), emit=emit)
             emit("verdict", "done" if res.get("verdict") == "verified" else "error", res.get("headline", ""),
                  {"verdict": res.get("verdict")})
