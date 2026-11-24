@@ -322,6 +322,14 @@ def compare(before: dict, after: dict, approved: list[dict]) -> dict:
     """Before/after risk, approved-fix confirmation and regressions introduced by the fixes."""
     lv = lambda r: {k: r["checkpoint"]["what_looks_risky"]["by_risk_level"].get(k, 0) for k in ("Critical", "High", "Medium", "Low", "Info")}
     b_sigs = {_sig(f) for f in before["findings"]}
+    # change-detection findings (DIFF-*) that only exist after the fixes describe the fixes themselves
+    # (versions changed, packages added / removed): expected, so not counted as new risk
+    expected = [f for f in after["findings"] if f["id"].startswith("DIFF-") and _sig(f) not in b_sigs]
+    exp_ids = {f["id"] for f in expected}
+    after = {**after, "findings": [f for f in after["findings"] if f["id"] not in exp_ids]}
+    after_levels = {k: 0 for k in ("Critical", "High", "Medium", "Low", "Info")}
+    for f in after["findings"]:
+        after_levels[f["risk_level"]] = after_levels.get(f["risk_level"], 0) + 1
     a_sigs = {_sig(f) for f in after["findings"]}
     vuln_cats = ("vulnerability", "malicious-package")
     resolved = [f for f in before["findings"] if f["category"] in vuln_cats and _sig(f) not in a_sigs]
@@ -364,7 +372,13 @@ def compare(before: dict, after: dict, approved: list[dict]) -> dict:
     for f in introduced:
         for c in culprits(f):
             blame[c] = blame.get(c, 0) + 1
-    return {"levels_before": lv(before), "levels_after": lv(after),
+    exp_kinds: dict[str, int] = {}
+    for f in expected:
+        k = {"VER": "versions changed", "ADD": "packages added", "REM": "packages removed", "INT": "content hashes changed",
+             "SRC": "download sources changed"}.get(f["id"].split("-")[1] if f["id"].count("-") else "", "other changes")
+        exp_kinds[k] = exp_kinds.get(k, 0) + 1
+    return {"levels_before": lv(before), "levels_after": after_levels,
+            "expected_changes": len(expected), "expected_change_kinds": exp_kinds,
             "findings_before": len(before["findings"]), "findings_after": len(after["findings"]),
             "vulnerable_packages_before": before["vulnerability_scan"].get("vulnerable_packages"),
             "vulnerable_packages_after": after["vulnerability_scan"].get("vulnerable_packages"),
