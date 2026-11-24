@@ -565,6 +565,23 @@ input.in:focus,select.in:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px 
 .fxrow{border-top:1px solid var(--line-2)} .fxrow-head{display:flex;gap:10px;align-items:center;padding:10px 16px;cursor:pointer;flex-wrap:wrap} .fxrow-head:hover{background:var(--surface-2)}
 .fxrow.open .fxrow-head{background:var(--surface-2)} .fxrow-body{padding:14px 16px 18px;border-top:1px solid var(--line-2)}
 @media (max-width:900px){.fxsteps{grid-template-columns:1fr 1fr}}
+/* ---------- VERIFY ---------- */
+.vfacts{display:flex;gap:8px;flex-wrap:wrap} .vfacts span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface);color:var(--ink-2)}
+.vverdict{display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:14px;background:var(--surface)}
+.vverdict h3{margin:4px 0 4px;font-size:19px} .vv-ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;flex:none}
+.vverdict.ok{border-color:var(--ev-line);background:var(--ev-soft)} .vverdict.ok .vv-ic{background:var(--ev)}
+.vverdict.wait{border-color:#fde68a;background:#fffbeb} .vverdict.wait .vv-ic{background:#b45309}
+.vverdict.no{border-color:#fecaca;background:#fff7f7} .vverdict.no .vv-ic{background:var(--crit)}
+.vcheck{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-2)} .vcheck:last-child{border-bottom:0}
+.vci{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;flex:none;margin-top:1px}
+.vci.ok{background:var(--ev);color:#fff} .vci.wait{background:#f59e0b;color:#fff} .vci.no{background:var(--crit);color:#fff} .vci.skip{background:var(--line);color:var(--muted)}
+.vlog summary{font-size:12px;color:var(--brand);cursor:pointer;margin-top:4px} .vlog pre{max-height:220px;overflow:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:11px;white-space:pre-wrap}
+.dgood{color:var(--ev);font-weight:600} .dbad{color:var(--crit);font-weight:600}
+.vrow{display:flex;gap:8px;align-items:center;padding:4px 0;border-bottom:1px solid var(--line-2)} .vrow:last-child{border-bottom:0}
+.fxbulk{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.fxrev{display:inline-flex;gap:8px;align-items:center;font-size:13px;color:var(--muted)} .fxrev .in{padding:7px 10px;font-size:13px;min-width:200px}
+.vplist{margin:4px 0 0;padding-left:16px;font-size:12px;color:var(--ink-2)} .vplist li{margin:2px 0}
+.vculprits{border:1px solid #fde68a;background:#fffbeb;border-radius:8px;padding:10px 12px;margin-bottom:10px}
 /* ---------- error states ---------- */
 .tstep.error .ico{border-color:#fecaca;background:var(--crit-soft)} .tstep.error:before{background:#fecaca}
 .tstep.error .msg{color:var(--crit)}
@@ -697,7 +714,7 @@ function bindFindingLinks(root){ root.querySelectorAll('[data-fid]').forEach(n =
 
 /* ================= router ================= */
 const MORE_TABS = ['files','discovery','chain'];
-const TABS = [['journey','The Journey'],['findings','All Findings'],['vulns','Vulnerabilities'],['tamper','Suspicious Changes'],['fullgraph','Full Graph'],['graph','Dependency Graph'],['fixes','Fixes'],['agents','Agents'],['report','Final Report'],['files','Files'],['discovery','How We Discovered'],['chain','Supply Chain']];
+const TABS = [['journey','The Journey'],['findings','All Findings'],['vulns','Vulnerabilities'],['tamper','Suspicious Changes'],['fullgraph','Full Graph'],['graph','Dependency Graph'],['fixes','Fixes'],['verify','Verify'],['agents','Agents'],['report','Final Report'],['files','Files'],['discovery','How We Discovered'],['chain','Supply Chain']];
 async function route(){
   closeDrawer();
   const parts = location.hash.replace(/^#\/?/, '').split('/');
@@ -833,7 +850,7 @@ function resultView(tab){
   $('#moreBtn').onclick = e => { e.stopPropagation(); const m = $('#moreMenu'), r = e.currentTarget.getBoundingClientRect();
     m.style.top = r.bottom + 'px'; m.style.left = Math.min(r.left, innerWidth - 240) + 'px'; m.classList.toggle('hidden'); };
   document.addEventListener('click', () => { const m = $('#moreMenu'); if (m) m.classList.add('hidden'); }, {once: true});
-  const fn = {journey, files, discovery, chain, graph, fullgraph: window.fullgraph, agents: agentsView, fixes: fixesView, vulns, tamper, findings, report}[tab] || journey;
+  const fn = {journey, files, discovery, chain, graph, fullgraph: window.fullgraph, agents: agentsView, fixes: fixesView, verify: verifyView, vulns, tamper, findings, report}[tab] || journey;
   $('#main').innerHTML = '<div class="view" id="v"></div>';
   fn($('#v'));
   const deg = (R.agents && R.agents.degraded) || [];
@@ -1511,6 +1528,17 @@ function agentsView(el){
 
 /* ================= FIXES: proposals, human approval, sandbox apply ================= */
 let FIX = null, fixFilter = {status: '', bump: ''}, fixOpen = null;
+const getReviewer = () => { try { return localStorage.getItem('guardian-reviewer') || ''; } catch (e) { return ''; } };
+const setReviewer = v => { try { localStorage.setItem('guardian-reviewer', v.trim()); } catch (e) {} };
+const reviewerField = () => `<label class="fxrev">Reviewer <input class="in" data-fx-shared placeholder="Your name (optional)" value="${esc(getReviewer())}"></label>`;
+document.addEventListener('input', ev => { if (ev.target.matches('[data-fx-shared]')) { setReviewer(ev.target.value); document.querySelectorAll('[data-fx-shared]').forEach(i => { if (i !== ev.target) i.value = ev.target.value; }); } });
+const byWho = d => d.reviewer ? ` by <b>${esc(d.reviewer)}</b>` : '';
+async function bulkDecide(ids, decision){
+  const r = await api(`/api/report/${SLUG}/fixes/decisions`, {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ids, decision, reviewer: getReviewer()})});
+  Object.assign(FIX.decisions, r.decisions);
+  return r.updated;
+}
 const fixDecision = id => (FIX && FIX.decisions[id]) || {decision: 'pending'};
 function fixForFinding(f){
   if (!FIX) return '';
@@ -1528,29 +1556,26 @@ function diffTable(rows){
 function fixCard(fx, inDrawer){
   const d = fixDecision(fx.id);
   const st = {approved: ['Approved', 'ok'], rejected: ['Rejected', 'no'], pending: ['Waiting for review', 'wait']}[d.decision] || ['Waiting for review', 'wait'];
-  let reviewer = ''; try { reviewer = localStorage.getItem('guardian-reviewer') || ''; } catch (e) {}
   return `<div class="sec-t">Proposed fix · needs your approval</div>
     <div class="fixhead"><b>${esc(fx.summary)}</b><span class="fxst ${st[1]}">${st[0]}</span></div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px"><span class="chip bump-${fx.bump}">${fx.bump} update</span><span class="chip">${fx.kind === 'direct' ? 'direct dependency' : 'transitive · npm override'}</span>${scopeChip(fx.scope)}<span class="badge b-${fx.max_level}"><i class="dot"></i>${fx.max_level} · ${fx.max_risk}</span></div>
     <p class="small" style="margin:0 0 10px">${esc(fx.why)}</p>
     ${diffTable(fx.diff)}
     <div class="fxdec">
-      <input class="in" data-fx-rev placeholder="Your name" value="${esc(d.decision !== 'pending' ? d.reviewer : reviewer)}">
+      ${inDrawer ? reviewerField() : ''}
       <input class="in" data-fx-com placeholder="Comment (optional)" value="${esc(d.decision !== 'pending' ? d.comment : '')}" style="flex:1;min-width:160px">
       <button class="btn primary" data-fx-act="approved" data-fx="${esc(fx.id)}">Approve</button>
       <button class="btn" data-fx-act="rejected" data-fx="${esc(fx.id)}">Reject</button>
       ${d.decision !== 'pending' ? `<button class="btn ghost" data-fx-act="pending" data-fx="${esc(fx.id)}">Undo</button>` : ''}
     </div>
-    ${d.decision !== 'pending' ? `<div class="xs muted" style="margin-top:6px">${st[0]} by <b>${esc(d.reviewer)}</b> · ${new Date(d.at).toLocaleString()}${d.comment ? ' · “' + esc(d.comment) + '”' : ''}</div>` : ''}
+    ${d.decision !== 'pending' ? `<div class="xs muted" style="margin-top:6px">${st[0]}${byWho(d)} · ${new Date(d.at).toLocaleString()}${d.bulk ? ' · via “all”' : ''}${d.comment ? ' · “' + esc(d.comment) + '”' : ''}</div>` : ''}
     ${inDrawer ? `<div class="xs muted" style="margin-top:8px">Approved fixes are applied to a sandbox copy from the <a href="#/r/${SLUG}/fixes">Fixes</a> tab. The original repository is never changed.</div>` : ''}`;
 }
 document.addEventListener('click', async ev => {
   const b = ev.target.closest('[data-fx-act]'); if (!b) return;
   ev.preventDefault(); ev.stopPropagation();
   const box = b.closest('.fixblk, .fxrow-body'), id = b.dataset.fx;
-  const reviewer = (box.querySelector('[data-fx-rev]') || {}).value || '', comment = (box.querySelector('[data-fx-com]') || {}).value || '';
-  if (b.dataset.fxAct !== 'pending' && !reviewer.trim()) { const r = box.querySelector('[data-fx-rev]'); r.focus(); r.classList.add('need'); return; }
-  try { localStorage.setItem('guardian-reviewer', reviewer); } catch (e) {}
+  const reviewer = getReviewer(), comment = (box.querySelector('[data-fx-com]') || {}).value || '';
   b.disabled = true;
   try {
     FIX.decisions[id] = await api(`/api/report/${SLUG}/fixes/${encodeURIComponent(id)}/decision`, {method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -1573,6 +1598,12 @@ function fixesView(el){
       <div class="fxcounts"><span><b>${cnt.pending}</b> pending</span><span><b style="color:var(--ev)">${cnt.approved}</b> approved</span><span><b style="color:var(--crit)">${cnt.rejected}</b> rejected</span><span class="muted">${(P.skipped || []).length} need a manual fix</span></div>
       <button class="btn primary" id="fxApply" ${cnt.approved ? '' : 'disabled'}>Apply ${cnt.approved || ''} approved fix${cnt.approved === 1 ? '' : 'es'} in a sandbox</button>
     </div>
+    <div class="card pad fxbulk">${reviewerField()}
+      <span class="small muted">Decide in bulk for the ${rows.length === P.fixes.length ? 'all ' + rows.length : rows.length + ' filtered'} fixes below:</span>
+      <button class="btn" id="fxAll" ${rows.length ? '' : 'disabled'}>Approve all${rows.length < P.fixes.length ? ' shown' : ''} (${rows.length})</button>
+      <button class="btn" id="fxNone" ${rows.length ? '' : 'disabled'}>Reject all${rows.length < P.fixes.length ? ' shown' : ''}</button>
+      <button class="btn ghost" id="fxClear" ${cnt.approved + cnt.rejected ? '' : 'disabled'}>Clear all decisions</button>
+    </div>
     <div id="fxResult">${res ? fixResult(res) : ''}</div>
     <div class="card" style="overflow:hidden;margin-top:16px">
       <div class="toolbar"><select class="in" id="fxS"><option value="">All decisions</option>${['pending','approved','rejected'].map(s => `<option value="${s}" ${fixFilter.status===s?'selected':''}>${stLabel[s]}</option>`).join('')}</select>
@@ -1584,6 +1615,15 @@ function fixesView(el){
     </div>
     ${(P.skipped || []).length ? `<div class="card pad" style="margin-top:16px"><div class="eyebrow" style="margin-bottom:8px">Needs a manual fix (${P.skipped.length})</div><table class="tbl"><tbody>${P.skipped.map(s => `<tr><td class="mono xs">${esc(s.package)}</td><td class="small">${esc(s.reason)}</td></tr>`).join('')}</tbody></table></div>` : ''}
     <p class="xs muted" style="margin-top:14px">${esc(P.policy || '')}</p>`;
+  const bulk = async (ids, decision, msg) => { if (msg && !confirm(msg)) return;
+    try { await bulkDecide(ids, decision); fixesView(el); } catch (e) { alert('Could not save: ' + e.message); } };
+  const majors = rows.filter(f => f.bump === 'major').length;
+  $('#fxAll').onclick = () => bulk(rows.map(f => f.id), 'approved', `Approve ${rows.length} fix${rows.length === 1 ? '' : 'es'}?` +
+    (majors ? `\n\n${majors} of them are MAJOR upgrades, which can break the app.` : '') +
+    `\n\nNothing changes in the repository: approved fixes are applied and checked in a sandbox (Verify tab).`);
+  $('#fxNone').onclick = () => bulk(rows.map(f => f.id), 'rejected', `Reject ${rows.length} fix${rows.length === 1 ? '' : 'es'}?`);
+  $('#fxClear').onclick = () => bulk(P.fixes.filter(f => fixDecision(f.id).decision !== 'pending').map(f => f.id), 'pending',
+    'Clear every decision and start the review again?');
   $('#fxS').onchange = e => { fixFilter.status = e.target.value; fixesView(el); };
   $('#fxB').onchange = e => { fixFilter.bump = e.target.value; fixesView(el); };
   el.querySelectorAll('[data-fxopen]').forEach(h => h.onclick = () => { fixOpen = fixOpen === h.dataset.fxopen ? null : h.dataset.fxopen; fixesView(el); });
@@ -1604,6 +1644,96 @@ function fixResult(r){
       ${r.results.map(x => `<tr><td class="mono xs">${esc(x.package)}</td><td class="mono xs">${esc(x.from_version)} → ${esc(x.to_version)}</td><td class="mono xs">${esc(x.installed_now.join(', ') || '—')}</td><td>${x.advisories_fixed}${x.advisories_left.length ? ` <span class="xs muted">(${x.advisories_left.length} left)</span>` : ''}</td><td><span class="fxst ${lbl[x.status][1]}">${lbl[x.status][0]}</span>${x.note ? `<div class="xs muted" style="margin-top:4px;max-width:260px;white-space:normal">${esc(x.note)}</div>` : ''}</td></tr>`).join('')}</tbody></table>
     <div class="eyebrow" style="margin:16px 0 8px">package.json in the sandbox</div>${diffTable(r.package_json_diff)}
     <p class="xs muted" style="margin:10px 0 0">Lockfile regenerated with <code>${esc(r.lockfile_command)}</code> (no install scripts run). The original repository was not changed; apply the patch yourself after review.</p></div>`;
+}
+
+/* ================= VERIFY: build, test and re-scan after approval ================= */
+let VJOB = null, VPOLL = null;
+const VICON = {pass: ['✓', 'ok'], warn: ['!', 'wait'], fail: ['✕', 'no'], skip: ['–', 'skip']};
+async function verifyView(el){
+  clearInterval(VPOLL);
+  const st = await api(`/api/report/${SLUG}/verify`).catch(() => ({steps: [], result: null}));
+  const approved = FIX ? FIX.plan.fixes.filter(f => fixDecision(f.id).decision === 'approved') : [];
+  const res = st.result;
+  el.innerHTML = `<div class="vhead"><div><h2>Verify</h2><p>After fixes are approved, Guardian builds and tests the fixed code in an isolated Docker container, re-scans it with every agent, and compares everything with the original code.</p></div></div>
+    <div class="vfacts"><span>Sandbox copy only, the repository is never changed</span><span>Install scripts never run</span><span>Project code runs with no network</span><span>Original and fixed code tested side by side</span></div>
+    <div class="card pad fxbar" style="margin-top:14px"><div><b>${approved.length}</b> approved fix${approved.length === 1 ? '' : 'es'} ready to verify${approved.length ? ': ' + approved.slice(0, 4).map(f => `<code>${esc(f.package)} ${esc(f.to_version)}</code>`).join(' ') + (approved.length > 4 ? ' …' : '') : '. <a href="#/r/' + SLUG + '/fixes">Approve fixes first</a>.'}</div>
+      ${approved.length ? `<button class="btn primary" id="vRun">${res ? 'Verify again' : 'Build, test and re-scan'}</button>`
+        : FIX && FIX.plan.fixes.length ? `<div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn" href="#/r/${SLUG}/fixes">Review fixes first</a><button class="btn primary" id="vAll">Approve all ${FIX.plan.fixes.length} and verify</button></div>` : ''}</div>
+    <div id="vLive"></div><div id="vRes">${res ? verifyResult(res) : '<div class="empty">No verification yet.</div>'}</div>`;
+  bindFindingLinks($('#vRes'));
+  if ($('#vMore')) $('#vMore').onclick = () => { vShowAll = !vShowAll; verifyView(el); };
+  $('#vRes').querySelectorAll('[data-vreject]').forEach(b => b.onclick = async () => {
+    b.disabled = true; try { await bulkDecide([b.dataset.vreject], 'rejected'); b.textContent = 'Rejected'; } catch (e) { alert(e.message); b.disabled = false; } });
+  const start = async () => {
+    try { const j = await api(`/api/report/${SLUG}/verify`, {method: 'POST'}); VJOB = j.job; watchVerify(el, st.steps); }
+    catch (e) { $('#vLive').innerHTML = `<div class="card pad scan-result err" style="margin-top:12px"><div><b>Could not start</b><div class="small">${esc(e.message)}</div></div></div>`; }
+  };
+  if ($('#vRun')) $('#vRun').onclick = start;
+  if ($('#vAll')) $('#vAll').onclick = async () => {
+    const all = FIX.plan.fixes, majors = all.filter(f => f.bump === 'major').length;
+    if (!confirm(`Approve all ${all.length} proposed fixes and verify them?` + (majors ? `\n\n${majors} are MAJOR upgrades, which can break the app; the verification will show it.` : '') +
+      `\n\nThe repository itself is never changed.`)) return;
+    try { await bulkDecide('all', 'approved'); } catch (e) { alert('Could not approve: ' + e.message); return; }
+    await verifyView(el); start();
+  };
+  if (VJOB) watchVerify(el, st.steps);
+}
+function watchVerify(el, steps){
+  if ($('#vRun')) $('#vRun').disabled = true; $('#vRes').innerHTML = '';
+  const t0 = Date.now();
+  const tick = async () => {
+    let j; try { j = await api('/api/jobs/' + VJOB); } catch (e) { clearInterval(VPOLL); VJOB = null; return; }
+    const state = {};
+    j.events.forEach(ev => { state[ev.step] = {status: ev.status, msg: ev.message}; });
+    $('#vLive').innerHTML = `<div class="card pad" style="margin-top:12px"><div class="eyebrow">Verifying · ${Math.round((Date.now() - t0) / 1000)}s</div>
+      <div class="tl" style="margin-top:10px">${steps.map(([id, t], i) => { const s = state[id]; return `<div class="tstep ${s ? s.status : 'pending'}"><div class="ico">${i + 1}</div><div><h4>${esc(t)} ${s ? (s.status === 'running' ? '<span class="spin"></span>' : s.status === 'error' ? '<span class="st-err">!</span>' : '<span style="color:var(--ev)">✓</span>') : ''}</h4><div class="msg">${s ? esc(s.msg) : ''}</div></div></div>`; }).join('')}</div></div>`;
+    if (j.status !== 'running') {
+      clearInterval(VPOLL); VJOB = null;
+      if (j.status === 'error') { $('#vLive').innerHTML += `<div class="card pad scan-result err" style="margin-top:12px"><div><b>Verification stopped</b><div class="small">${esc(j.error)}</div></div></div>`; if ($('#vRun')) $('#vRun').disabled = false; return; }
+      verifyView(el);
+    }
+  };
+  tick(); VPOLL = setInterval(tick, 1500);
+}
+let vShowAll = false;
+const STATUS_ORDER = {'not fixed': 0, 'partly fixed': 1, fixed: 2};
+const sortedFixes = fs => fs.slice().sort((a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3) || a.package.localeCompare(b.package));
+const fixCounts = fs => { const c = {}; fs.forEach(f => c[f.status] = (c[f.status] || 0) + 1); return ['fixed', 'partly fixed', 'not fixed'].filter(k => c[k]).map(k => `${c[k]} ${k}`).join(' · '); };
+function copiesNote(f){
+  if (f.reason) return `<div class="xs muted" style="white-space:normal">${esc(f.reason)}</div>`;
+  if (!(f.copies_before > 1 || f.copies_left)) return '';
+  const bundled = f.bundled_in && f.bundled_in.length && f.copies_left ? '; rest bundled in ' + f.bundled_in.map(esc).join(', ') : '';
+  if (f.copies_left >= f.copies_before) return `<div class="xs muted">still installed in ${f.copies_left} place${f.copies_left === 1 ? '' : 's'} (was ${f.copies_before})${bundled}</div>`;
+  return `<div class="xs muted">${f.copies_before - f.copies_left} of ${f.copies_before} copies upgraded${bundled}</div>`;
+}
+function verifyResult(r){
+  const tone = {verified: 'ok', partial: 'wait', 'new-risk': 'wait', regression: 'no', 'build-failed': 'no', 'not-run': 'no'}[r.verdict] || 'wait';
+  const C = r.comparison, S = r.steps || {};
+  const delta = (b, a) => { const d = a - b; return `<b>${b}</b> → <b>${a}</b> <span class="${d < 0 ? 'dgood' : d > 0 ? 'dbad' : 'muted'}">${d < 0 ? '▼ ' + (-d) : d > 0 ? '▲ ' + d : '±0'}</span>`; };
+  const logs = k => { const a = (S[k] || {}).after || {}, b = (S[k] || {}).before || {};
+    return (a.log || b.log) ? `<details class="vlog"><summary>Logs</summary>${a.log ? `<div class="xs muted">Fixed code</div><pre>${esc(a.log)}</pre>` : ''}${b.log ? `<div class="xs muted">Original code</div><pre>${esc(b.log)}</pre>` : ''}</details>` : ''; };
+  const places = (S.usage && S.usage.places) || {};
+  return `<div class="vverdict ${tone}"><div class="vv-ic">${tone === 'ok' ? '✓' : tone === 'no' ? '✕' : '!'}</div><div><div class="eyebrow">Verdict · ${new Date(r.finished_at).toLocaleString()} · ${r.seconds}s</div>
+      <h3>${esc(r.headline)}</h3>${r.total ? `<div class="small">${r.fixed} of ${r.total} approved fixes confirmed by the re-scan.</div>` : ''}${r.note ? `<div class="small muted" style="margin-top:4px">${esc(r.note)}</div>` : ''}</div></div>
+    <div class="grid g2" style="align-items:start;margin-top:14px">
+      <div class="card pad"><div class="eyebrow" style="margin-bottom:8px">Checks</div>
+        ${(r.step_titles || []).filter(([k]) => k !== 'verdict' && S[k]).map(([k, t]) => { const x = S[k], ic = VICON[x.status] || VICON.skip; return `<div class="vcheck"><span class="vci ${ic[1]}">${ic[0]}</span><div><b>${esc(t)}</b><div class="small muted">${esc(x.detail || '')}</div>${k === 'lockfile' && x.new_problems && x.new_problems.length ? `<ul class="vplist">${x.new_problems.slice(0, 8).map(pb => `<li>${esc(pb.text)}</li>`).join('')}${x.new_problems.length > 8 ? `<li class="muted">… ${x.new_problems.length - 8} more</li>` : ''}</ul>` : ''}${k === 'install' && x.blocked_by && x.blocked_by.length ? `<div class="xs" style="margin-top:4px">${x.blocked_by.map(b => `<a data-fid="${esc(b.finding)}">${esc(b.package)}: ${esc(b.title)}</a>`).join('<br>')}</div>` : ''}${['install','runtime','tests'].includes(k) ? logs(k) : ''}
+          ${k === 'usage' && Object.values(places).some(v => v.length) ? `<div class="xs mono" style="margin-top:4px">${Object.entries(places).filter(([, v]) => v.length).map(([p, v]) => `<div><b>${esc(p)}</b>: ${v.slice(0, 6).map(esc).join(', ')}${v.length > 6 ? ' …' : ''}</div>`).join('')}</div>` : ''}</div></div>`; }).join('')}</div>
+      <div>${C ? `<div class="card pad"><div class="eyebrow" style="margin-bottom:8px">Before → after the fixes</div>
+          <dl class="ag-kv"><dt>Critical</dt><dd>${delta(C.levels_before.Critical, C.levels_after.Critical)}</dd><dt>High</dt><dd>${delta(C.levels_before.High, C.levels_after.High)}</dd>
+          <dt>Medium</dt><dd>${delta(C.levels_before.Medium, C.levels_after.Medium)}</dd><dt>All findings</dt><dd>${delta(C.findings_before, C.findings_after)}</dd>
+          <dt>Vulnerable packages</dt><dd>${delta(C.vulnerable_packages_before || 0, C.vulnerable_packages_after || 0)}</dd>
+          <dt>Resolved</dt><dd><b style="color:var(--ev)">${C.resolved_count}</b> known issues gone</dd><dt>Introduced</dt><dd><b style="color:${C.introduced_count ? 'var(--crit)' : 'var(--ev)'}">${C.introduced_count}</b> new issues</dd></dl></div>
+        <div class="card pad" style="margin-top:14px"><div class="eyebrow" style="margin-bottom:8px">Approved fixes · ${fixCounts(C.fixes)}</div><table class="tbl"><thead><tr><th>Package</th><th>Change</th><th>Advisories</th><th>Result</th></tr></thead><tbody>
+          ${sortedFixes(C.fixes).slice(0, vShowAll ? 1e9 : 12).map(f => `<tr><td class="mono xs">${esc(f.package)}</td><td class="mono xs">${esc(f.from_version)} → ${esc(f.to_version)} <span class="chip bump-${f.bump}">${f.bump}</span></td><td>${f.fixed} / ${f.of}${copiesNote(f)}${f.new_issues_in_new_version.length ? `<div class="xs" style="color:var(--crit)">new in ${esc(f.to_version)}: ${f.new_issues_in_new_version.map(esc).join(', ')}</div>` : ''}</td><td><span class="fxst ${f.status === 'fixed' ? 'ok' : f.status === 'partly fixed' ? 'wait' : 'no'}">${esc(f.status)}</span></td></tr>`).join('')}</tbody></table>
+          ${C.fixes.length > 12 ? `<button class="btn ghost" id="vMore" style="margin-top:8px">${vShowAll ? 'Show fewer' : `Show all ${C.fixes.length}`}</button>` : ''}</div>
+        ${C.dependency_changes ? `<div class="card pad" style="margin-top:14px"><div class="eyebrow" style="margin-bottom:6px">Dependency changes made by the fixes (expected)</div>
+          <div class="small"><b>${C.dependency_changes.upgraded}</b> packages upgraded · <b>${C.dependency_changes.added}</b> added · <b>${C.dependency_changes.removed}</b> removed</div>
+          ${C.dependency_changes.added_examples.length ? `<div class="xs muted" style="margin-top:4px">Added: ${C.dependency_changes.added_examples.map(esc).join(', ')}</div>` : ''}</div>` : ''}
+        ${C.introduced.length ? `<div class="card pad" style="margin-top:14px"><div class="eyebrow" style="margin-bottom:8px">New issues introduced by the upgrades (${C.introduced_count})</div>
+          ${Object.keys(C.introduced_by_fix || {}).length ? `<div class="vculprits"><div class="small" style="margin-bottom:6px">They came in through these approved fixes:</div>${Object.entries(C.introduced_by_fix).slice(0, 6).map(([id, n]) => `<div class="vrow"><span class="mono xs">${esc(id.replace(/^FIX-/, ''))}</span><span class="small muted">${n} new issue${n === 1 ? '' : 's'}</span><button class="btn" style="margin-left:auto;padding:4px 10px" data-vreject="${esc(id)}" ${fixDecision(id).decision === 'rejected' ? 'disabled' : ''}>${fixDecision(id).decision === 'rejected' ? 'Rejected' : 'Reject this fix'}</button></div>`).join('')}<div class="xs muted" style="margin-top:6px">Reject, then run Verify again.</div></div>` : ''}
+          ${C.introduced.slice(0, 15).map(f => `<div class="vrow"><span class="badge b-${f.risk_level}"><i class="dot"></i>${f.risk_score}</span><span class="mono xs">${esc(f.component)}</span><span class="small">${esc(f.title)}</span>${f.via && f.via.length ? `<span class="xs muted" style="margin-left:auto;white-space:nowrap">via ${esc(f.via[0].replace(/^FIX-/, ''))}</span>` : ''}</div>`).join('')}</div>` : ''}`
+        : '<div class="card pad small muted">The re-scan did not run, so there is no before/after comparison.</div>'}</div></div>`;
 }
 /* ================= 6. VULNERABILITIES ================= */
 function vulnsLegacy(el){

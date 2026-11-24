@@ -236,6 +236,24 @@ def fix_decision(slug, fix_id):
     return jsonify(entry)
 
 
+@app.post("/api/report/<slug>/fixes/decisions")
+def fix_decisions_bulk(slug):
+    """Approve / reject / reset many fixes at once: {"ids": [...] or "all", "decision", "reviewer"?, "comment"?}."""
+    from .remediation import record_decisions
+    st = _fix_state(slug)
+    known = [f["id"] for f in st["plan"]["fixes"]]
+    body = request.get_json(silent=True) or {}
+    ids = known if body.get("ids") == "all" else [i for i in (body.get("ids") or []) if i in set(known)]
+    if not ids:
+        return jsonify({"error": "no matching fixes"}), 400
+    try:
+        out = record_decisions(st["dir"], ids, body.get("decision", ""), body.get("reviewer", ""), body.get("comment", ""),
+                               bulk=len(ids) > 1)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    return jsonify({"updated": len(out), "decisions": out})
+
+
 @app.post("/api/report/<slug>/fixes/apply")
 def fix_apply(slug):
     from .remediation import apply_fixes
@@ -258,6 +276,59 @@ def fix_patch(slug):
     if not p.exists():
         abort(404)
     return send_file(p, mimetype="text/plain", as_attachment=True, download_name=f"{slug}-remediation.patch")
+
+
+# ------------------------------------------------------------------ verification (build, test, re-scan)
+
+def _rescan_full(slug: str):
+    """Full agent pipeline on the fixed sandbox (no LLM, no Trivy).
+
+    It uses the SAME baseline as the original scan (or none), so before and after are scored the same way. Using the
+    original code as the baseline would make every intended upgrade look like a suspicious supply-chain change."""
+    def run(sandbox: Path, original: Path) -> dict:
+        rep = json.loads(_report_path(slug).read_text(encoding="utf-8"))
+        base = Path(rep["baseline"]) if rep.get("baseline") and Path(rep["baseline"]).exists() else None
+        return run_scan(sandbox, OUTPUT / slug / "verify", base, use_llm=False, use_trivy=False, use_syft=False,
+                        meta={"slug": f"{slug}-verify", "baseline_label": rep.get("checkpoint", {}).get("what_changed", {}).get("baseline_label", "")})
+    return run
+
+
+def _run_verify(job: dict, slug: str) -> None:
+    from .remediation import apply_fixes
+    from .verify import run_verification
+    emit = _job_emit(job)
+    try:
+        with SCAN_LOCK:
+            st = _fix_state(slug)
+            res = run_verification(Path(st["target"]), st["dir"], st["plan"], st["decisions"],
+                                   apply_fixes=lambda t, o, p, d: apply_fixes(t, o, p, d, _rescan),
+                                   rescan_full=_rescan_full(slug), emit=emit)
+            emit("verdict", "done" if res.get("verdict") == "verified" else "error", res.get("headline", ""),
+                 {"verdict": res.get("verdict")})
+        job.update(status="done", slug=slug)
+    except Exception as e:
+        traceback.print_exc()
+        job.update(status="error", error=friendly_error(e), detail=f"{type(e).__name__}: {str(e)[:300]}")
+
+
+@app.post("/api/report/<slug>/verify")
+def start_verify(slug):
+    _report_path(slug)
+    if SCAN_LOCK.locked():
+        return jsonify({"error": "A scan or verification is already running. Please wait for it to finish."}), 409
+    jid = uuid.uuid4().hex[:12]
+    job = {"id": jid, "status": "running", "events": [], "started": time.time(), "slug": slug, "error": None,
+           "target": f"verify {slug}", "kind": "verify"}
+    JOBS[jid] = job
+    threading.Thread(target=_run_verify, args=(job, slug), daemon=True).start()
+    return jsonify({"job": jid})
+
+
+@app.get("/api/report/<slug>/verify")
+def verify_state(slug):
+    from .verify import STEPS as VSTEPS
+    p = _report_path(slug).parent / "verification.json"
+    return jsonify({"steps": VSTEPS, "result": json.loads(p.read_text(encoding="utf-8")) if p.exists() else None})
 
 
 def serve(port: int = 8765) -> None:
