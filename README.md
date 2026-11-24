@@ -200,7 +200,7 @@ Levels: ≥80 Critical, ≥60 High, ≥35 Medium, ≥15 Low. The rationale is st
 
 ## Known limitations (Day 1)
 - npm only (lockfile v2/v3). No reachability analysis yet (planned Day 2 stretch goal).
-- The typosquat reference list is curated (`guardian/data/popular_npm.txt`). Lookalikes with ≥50k weekly downloads are treated as legitimate.
+- The typosquat reference list is curated (`guardian/data/popular_npm.txt`). Lookalikes with ≥ 50k weekly downloads are treated as legitimate.
 - Docker is not installed on the dev machine, so the image is scanned remotely by Trivy and the Dockerfile is analysed statically.
 - `node:latest` is flagged but not scanned (a floating tag gives a non-reproducible result).
 
