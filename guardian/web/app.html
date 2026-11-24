@@ -244,6 +244,74 @@ input.in:focus,select.in:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px 
 .sevcards .card{padding:16px 18px}
 .sevcards b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em}
 
+/* ---------- VULNERABILITIES: SECURITY WORKSPACE ---------- */
+.vx-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px}
+.vx-head h2{font-size:26px;font-weight:800}
+.vx-head p{margin:5px 0 0;color:var(--muted)}
+.vx-live{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.vx-live i{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px var(--teal-soft)}
+.vx-hero{display:grid;grid-template-columns:minmax(0,1.55fr) repeat(4,minmax(110px,.55fr));gap:10px;margin-bottom:14px}
+.vx-posture{min-height:150px;border:0;border-radius:16px;padding:20px 22px;color:#fff;background:linear-gradient(125deg,#172554 0%,#312e81 56%,#4338ca 100%);position:relative;overflow:hidden;box-shadow:0 16px 34px rgba(49,46,129,.16)}
+.vx-posture:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-110px;top:-130px;border:42px solid rgba(255,255,255,.06)}
+.vx-posture .eyebrow{color:#c7d2fe}
+.vx-posture h3{color:#fff;font-size:22px;margin:8px 0 5px}
+.vx-posture p{margin:0;color:#cbd5e1;font-size:12.5px;max-width:440px}
+.vx-posture .vx-actions{display:flex;gap:7px;margin-top:16px;position:relative}
+.vx-posture .vx-actions span{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);border-radius:8px;padding:5px 9px;font-size:11.5px}
+.vx-metric{min-height:150px;border:1px solid var(--line);border-radius:16px;padding:16px;background:var(--surface);display:flex;flex-direction:column;justify-content:space-between}
+.vx-metric-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.vx-metric-head i{width:9px;height:9px;border-radius:50%;background:var(--vx-c)}
+.vx-metric strong{font-size:34px;line-height:.95;color:var(--vx-c);letter-spacing:-.04em}
+.vx-metric small{color:var(--muted);font-size:11.5px}
+.vx-toolbar{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin-bottom:12px}
+.vx-toolbar input.in{flex:1;min-width:220px}
+.vx-filters{display:flex;gap:6px;flex-wrap:wrap}
+.vx-chip{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:999px;padding:6px 11px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.vx-chip.on{border-color:#1e293b;background:#1e293b;color:#fff}
+.vx-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px;align-items:start}
+.vx-listcard{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden}
+.vx-listhead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.vx-listhead b{font-size:13.5px}
+.vx-viewtog{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:3px}
+.vx-viewtog button{border:0;background:transparent;color:var(--muted);border-radius:6px;padding:5px 9px;font:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.vx-viewtog button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(15,23,42,.08)}
+.vx-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px;max-height:520px;overflow:auto}
+.vx-package{border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;background:var(--surface);transition:.15s ease}
+.vx-package:hover{border-color:#b9c1d4;transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.06)}
+.vx-package-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.vx-package-name{font-family:var(--mono);font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.vx-package-count{min-width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--line-2);font-size:11.5px;font-weight:800}
+.vx-package-meta{display:flex;align-items:center;gap:6px;margin:9px 0 8px;flex-wrap:wrap}
+.vx-package-meta .chip{font-size:10.5px}
+.vx-bar{height:5px;border-radius:999px;background:var(--line-2);overflow:hidden}
+.vx-bar i{display:block;height:100%;width:var(--vx-width);background:var(--vx-c);border-radius:999px}
+.vx-package-foot{display:flex;justify-content:space-between;gap:8px;margin-top:8px;color:var(--muted);font-size:11.5px}
+.vx-package-foot b{color:var(--ink-2)}
+.vx-side{display:grid;gap:12px}
+.vx-sidecard{border:1px solid var(--line);border-radius:16px;background:var(--surface);padding:14px}
+.vx-sidecard h3{font-size:13.5px}
+.vx-sidecard>.small{margin-top:2px}
+.vx-profile{display:flex;gap:14px;align-items:center;margin-top:12px}
+.vx-ring{--vx-pct:38;width:78px;height:78px;border-radius:50%;background:conic-gradient(var(--crit) calc(var(--vx-pct)*1%),var(--line-2) 0);display:grid;place-items:center;flex:none}
+.vx-ring:before{content:"";width:62px;height:62px;border-radius:50%;background:var(--surface);grid-area:1/1}
+.vx-ring strong{grid-area:1/1;z-index:1;font-size:16px}
+.vx-profile-copy b{display:block;font-size:14px}.vx-profile-copy span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.vx-focus{margin-top:10px}
+.vx-focus-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2);cursor:pointer}
+.vx-focus-row:last-child{border-bottom:0}
+.vx-focus-row:hover .mono{color:var(--brand)}
+.vx-focus-row .mono{font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis}
+.vx-focus-row span{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
+.vx-focus-row .badge{font-size:10px;padding:2px 7px}
+.vx-advisories{max-height:520px;overflow:auto;padding:10px}
+.vx-advisory{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer}
+.vx-advisory:last-child{margin-bottom:0}
+.vx-advisory:hover{background:var(--surface-2)}
+.vx-advisory b{display:block;font-size:12.5px}.vx-advisory span{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.vx-empty{padding:48px 20px;text-align:center;color:var(--muted)}
+@media(max-width:1050px){.vx-hero{grid-template-columns:repeat(4,minmax(0,1fr))}.vx-posture{grid-column:1/-1}.vx-layout{grid-template-columns:1fr}.vx-side{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.vx-head{align-items:flex-start}.vx-live{display:none}.vx-hero{grid-template-columns:repeat(2,minmax(0,1fr))}.vx-toolbar{align-items:flex-start;flex-direction:column}.vx-toolbar input.in{width:100%;flex:none}.vx-layout{display:block}.vx-side{display:none}.vx-cards{grid-template-columns:1fr}.vx-posture{min-height:170px}}
+
 /* ---------- CASE FILES ---------- */
 .cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
 .case{display:flex;flex-direction:column;overflow:hidden;cursor:pointer;transition:.15s}
@@ -1406,7 +1474,7 @@ function fixResult(r){
     <p class="xs muted" style="margin:10px 0 0">Lockfile regenerated with <code>${esc(r.lockfile_command)}</code> (no install scripts run). The original repository was not changed; apply the patch yourself after review.</p></div>`;
 }
 /* ================= 6. VULNERABILITIES ================= */
-function vulns(el){
+function vulnsLegacy(el){
   const V = F.filter(f => ['vulnerability','malicious-package'].includes(f.category));
   const inv = {}; (R.inventory||[]).forEach(c => { if (!(c.label in inv) || c.depth < inv[c.label].depth) inv[c.label] = c; });
   const pk = {}; V.forEach(f => { const p = pk[f.component] = pk[f.component] || {label:f.component, list:[], worst:0, mal:false, scope:f.scope, fix:new Set()};
@@ -1416,48 +1484,158 @@ function vulns(el){
   const P = Object.values(pk).map(p => ({...p, depth: inv[p.label]?.depth || 1, n: p.list.length, sev: worstSev(p.list)}));
   const sevCount = {}; V.forEach(f => { const s = f.severity; sevCount[s] = (sevCount[s]||0)+1; });
   const mals = P.filter(p => p.mal);
-  el.innerHTML = `<div class="vhead"><div><h2>Vulnerability map</h2><p>${fmt(V.length)} known advisories across ${P.length} packages, placed by how deep they sit and whether they ship to production.</p></div>
-      <div class="seg"><button class="on" data-v="map">🫧 Map</button><button data-v="table">☰ Table</button></div></div>
-    ${plain('Each bubble is a <b>package with known problems</b>. <b>Bigger</b> = more problems. <b>Redder</b> = more severe. <b>Left</b> = chosen directly by the developers (easy to fix); <b>right</b> = buried deep inside other packages. The <b>top lane</b> ships to production, which matters most.')}
-    ${mals.length?`<div class="grid g3" style="margin-bottom:16px">${mals.map(p=>`<div class="malcard" data-fid="${esc(p.list.sort((a,b)=>b.risk_score-a.risk_score)[0].id)}"><span class="sk">☠️</span><div><div class="eyebrow" style="color:var(--crit)">Known malware</div><b class="mono">${esc(p.label)}</b><div class="xs muted">${p.scope==='runtime'?'ships to production':'dev only'} · level ${p.depth}</div></div></div>`).join('')}</div>`:''}
-    <div class="grid g4 sevcards" style="margin-bottom:16px">${[['CRITICAL','Critical'],['HIGH','High'],['MEDIUM','Medium'],['LOW','Low']].map(([s,l])=>`<div class="card"><span class="eyebrow">${l}</span><b style="color:${LVC[l]}">${fmt(sevCount[s]||0)}</b><span class="xs muted">advisories</span></div>`).join('')}</div>
-    <div class="card" id="vbox"><div id="swarm"></div></div>`;
+  const stats = [
+    ['CRITICAL','Critical',sevCount.CRITICAL||0,'var(--crit)'],
+    ['HIGH','High',sevCount.HIGH||0,'var(--high)'],
+    ['MEDIUM','Medium',sevCount.MEDIUM||0,'var(--med)'],
+    ['LOW','Low',sevCount.LOW||0,'var(--low)']
+  ];
+  const priority = [...P].sort((a,b) => b.worst-a.worst || (b.mal?1:0)-(a.mal?1:0)).slice(0,6);
+  el.innerHTML = `<div class="vhead"><div><h2>Vulnerability overview</h2><p>${fmt(V.length)} advisories across ${P.length} affected packages. Start with production risks, then work inward by dependency depth.</p></div>
+      <div class="vuln-toolbar"><div class="seg"><button class="on" data-v="map">Map</button><button data-v="table">Table</button></div></div></div>
+    ${mals.length?`<div class="vuln-alerts">${mals.map(p=>`<div class="vuln-alert" data-mal-fid="${esc(p.list.sort((a,b)=>b.risk_score-a.risk_score)[0].id)}"><div class="icon">!</div><div style="min-width:0"><div class="eyebrow" style="color:var(--crit)">Known malware</div><b class="mono">${esc(p.label)}</b><span>${p.scope==='runtime'?'Ships to production':'Developer dependency'} · dependency level ${p.depth}</span></div></div>`).join('')}</div>`:''}
+    <div class="vuln-summary">${stats.map(([,label,count,color])=>`<div class="card vuln-stat" style="--stat-color:${color}"><div class="label"><i></i>${label}</div><strong>${fmt(count)}</strong><span>advisories</span></div>`).join('')}</div>
+    <div id="vbox"></div>`;
+  el.querySelectorAll('[data-mal-fid]').forEach(c => c.onclick = () => { const fid=c.dataset.malFid; bindFindingLinks(el); const f=F.find(x=>x.id===fid); if(f) openFindingDrawer(f); });
+  const openFindingDrawer = f => {
+    openDrawer(f.component, `<div style="padding:20px"><h3 class="mono" style="font-size:18px">${esc(f.component)}</h3><p class="muted">${esc(f.title)}</p>${pathHTML(f.dependency_paths[0]||[f.component])}<div style="margin-top:12px"><div class="fitem" data-fid="${esc(f.id)}"><div class="top">${badge(f)}<span class="chip mono">${esc(f.vuln_ids[0]||'')}</span>${f.fixed_version?`<span class="chip">fix: ${esc(f.fixed_version.split(',')[0])}</span>`:''}</div><div class="t">${esc(f.title)}</div></div></div></div>`);
+  };
   const drawMap = () => {
-    const box = $('#swarm'); box.innerHTML = '';
-    const Wd = box.clientWidth || 1100, H = 560, m = {l:150, r:30, t:30, b:56};
-    const maxDepth = d3.max(P, p => p.depth) || 5;
+    $('#vbox').innerHTML = `<div class="card vuln-layout"><div class="card vuln-map-card" style="box-shadow:none"><div class="vuln-map-head"><div class="filters"><input class="in" id="vsearch" placeholder="Search packages"><select class="in" id="vscope"><option value="all">All packages</option><option value="runtime">Production</option><option value="dev">Developer only</option></select></div><div class="maplegend"><span><i class="dot" style="color:var(--crit)"></i>Critical</span><span><i class="dot" style="color:var(--high)"></i>High</span><span><i class="dot" style="color:var(--med)"></i>Medium</span></div></div><div class="swarm-wrap"><div id="vulnSwarm"></div></div></div><aside class="card vuln-priority"><h3>Fix first</h3><div class="small muted">Ranked by severity and exposure</div><div id="vpriority">${priority.map((p,i)=>`<div class="priority-item" data-pkg="${esc(p.label)}"><div class="priority-rank">${i+1}</div><div><div class="priority-name mono">${esc(p.label)}</div><div class="priority-meta">${p.n} advisory${p.n===1?'':'ies'} · ${p.scope==='runtime'?'production':'developer'}</div></div><div class="priority-score">${p.worst}<span>risk</span></div></div>`).join('')}</div></aside></div>`;
+    const box = $('#vulnSwarm');
+    let scope = 'all', query = '';
+    const render = () => {
+      box.innerHTML = '';
+      const filtered = P.filter(p => (scope==='all'||(scope==='runtime'?p.scope==='runtime':p.scope!=='runtime')) && (!query||p.label.toLowerCase().includes(query)));
+      if (!filtered.length) { box.innerHTML = `<div class="vuln-empty"><div><b>No matching packages</b><div class="small">Try another package name or scope.</div></div></div>`; return; }
+      const Wd = box.clientWidth || 800, H = box.clientHeight || 430, m = {l:30,r:24,t:38,b:44};
+      const maxDepth = d3.max(filtered,p=>p.depth)||5;
     const x = d3.scaleLinear().domain([0.5, maxDepth + .5]).range([m.l, Wd - m.r]);
-    const lanes = {runtime: m.t + (H - m.t - m.b) * .27, dev: m.t + (H - m.t - m.b) * .77};
-    const r = d3.scaleSqrt().domain([1, d3.max(P, p => p.n) || 1]).range([6, 26]);
-    const nodes = P.map(p => ({...p, x: x(p.depth), y: lanes[p.scope==='runtime'?'runtime':'dev'], rr: r(p.n)}));
-    const sim = d3.forceSimulation(nodes).force('x', d3.forceX(d => x(d.depth)).strength(1)).force('y', d3.forceY(d => lanes[d.scope==='runtime'?'runtime':'dev']).strength(.12)).force('c', d3.forceCollide(d => d.rr + 1.5)).stop();
+      const laneTop = m.t + 24, laneH = (H-m.t-m.b)/2;
+      const lanes = {runtime: laneTop + laneH*.42, dev: laneTop + laneH*1.42};
+      const r = d3.scaleSqrt().domain([1,d3.max(filtered,p=>p.n)||1]).range([8,24]);
+      const nodes = filtered.map(p=>({...p,x:x(p.depth),y:lanes[p.scope==='runtime'?'runtime':'dev'],rr:r(p.n)}));
+      const sim=d3.forceSimulation(nodes).force('x',d3.forceX(d=>x(d.depth)).strength(.95)).force('y',d3.forceY(d=>lanes[d.scope==='runtime'?'runtime':'dev']).strength(.14)).force('c',d3.forceCollide(d=>d.rr+3)).stop();
     for (let i = 0; i < 260; i++) sim.tick();
     const svg = d3.select(box).append('svg').attr('viewBox', `0 0 ${Wd} ${H}`).attr('height', H);
-    const laneH = (H - m.t - m.b) / 2;
-    [['runtime','🚀 Ships to production','#fff7ed'],['dev','🧪 Developer tools only','#f8fafc']].forEach(([k,t,c],i) => {
-      svg.append('rect').attr('x', 10).attr('y', m.t + i*laneH).attr('width', Wd-20).attr('height', laneH - 6).attr('rx', 14).attr('fill', c);
-      svg.append('text').attr('x', 24).attr('y', m.t + i*laneH + 26).text(t).attr('font-size', 13).attr('font-weight', 700).attr('fill', '#334155');
-      svg.append('text').attr('x', 24).attr('y', m.t + i*laneH + 44).text(`${nodes.filter(n => (n.scope==='runtime'?'runtime':'dev')===k).length} packages`).attr('font-size', 12).attr('fill', '#64748b');
+      [['runtime','PRODUCTION','#fff7ed'],['dev','DEVELOPER','#f8fafc']].forEach(([k,t,c],i)=>{
+        const y=m.t+i*laneH;
+        svg.append('rect').attr('x',10).attr('y',y).attr('width',Wd-20).attr('height',laneH-8).attr('rx',12).attr('fill',c);
+        svg.append('text').attr('x',22).attr('y',y+20).text(t).attr('font-size',10).attr('font-weight',800).attr('letter-spacing','1px').attr('fill','#64748b');
+        svg.append('text').attr('x',Wd-22).attr('y',y+20).attr('text-anchor','end').text(`${nodes.filter(n=>(n.scope==='runtime'?'runtime':'dev')===k).length} packages`).attr('font-size',11).attr('fill','#94a3b8');
     });
-    const ax = svg.append('g').attr('transform', `translate(0,${H - m.b + 6})`);
-    d3.range(1, maxDepth + 1).forEach(d => { ax.append('text').attr('x', x(d)).attr('y', 14).attr('text-anchor','middle').attr('font-size', 11.5).attr('fill','#64748b').text(d);
-      svg.append('line').attr('x1', x(d)).attr('x2', x(d)).attr('y1', m.t).attr('y2', H - m.b).attr('stroke', '#e2e8f0').attr('stroke-dasharray', '2,4'); });
-    ax.append('text').attr('x', m.l).attr('y', 36).attr('font-size', 12).attr('fill', '#334155').attr('font-weight', 600).text('← chosen directly by developers');
-    ax.append('text').attr('x', Wd - m.r).attr('y', 36).attr('text-anchor','end').attr('font-size', 12).attr('fill', '#334155').attr('font-weight', 600).text('buried deep inside other packages →');
+      d3.range(1,maxDepth+1).forEach(d=>{
+        svg.append('line').attr('x1',x(d)).attr('x2',x(d)).attr('y1',m.t).attr('y2',H-m.b+4).attr('stroke','#e8edf5').attr('stroke-dasharray','3,5');
+      });
+      const ax=svg.append('g').attr('transform',`translate(0,${H-m.b+22})`);
+      ax.append('text').attr('x',m.l).attr('y',0).text('Direct dependencies').attr('font-size',11).attr('fill','#64748b');
+      ax.append('text').attr('x',Wd-m.r).attr('y',0).attr('text-anchor','end').text('Transitive / deeper').attr('font-size',11).attr('fill','#64748b');
     const g = svg.append('g').selectAll('g').data(nodes).join('g').attr('transform', d => `translate(${d.x},${d.y})`).style('cursor','pointer');
-    g.append('circle').attr('r', 0).attr('fill', d => d.mal ? '#7f1d1d' : LVC[d.sev]).attr('fill-opacity', .85).attr('stroke', '#fff').attr('stroke-width', 1.5)
-      .transition().duration(700).delay((d,i) => i*4).attr('r', d => d.rr);
-    g.filter(d => d.mal).append('text').text('☠').attr('text-anchor','middle').attr('dy','.35em').attr('font-size', d => d.rr).attr('fill','#fff');
-    g.filter(d => d.rr > 15 && !d.mal).append('text').text(d => d.n).attr('text-anchor','middle').attr('dy','.35em').attr('font-size', 11).attr('font-weight', 700).attr('fill', '#fff');
-    g.on('mousemove', (e,d) => showTip(e, `<b>${esc(d.label)}</b><br>${d.n} advisor${d.n>1?'ies':'y'} · worst ${d.sev}${d.mal?' · <b style="color:#fca5a5">MALWARE</b>':''}<br>level ${d.depth} · ${d.scope==='runtime'?'ships to production':'dev only'}${d.fix.size?`<br>fix: upgrade to ${esc([...d.fix][0])}`:''}<br><i style="opacity:.7">click for details</i>`)).on('mouseleave', hideTip)
-     .on('click', (e,d) => { hideTip(); const fs = d.list.sort((a,b)=>b.risk_score-a.risk_score);
-       openDrawer(d.label, `<div style="padding:20px"><h3 class="mono" style="font-size:18px">${esc(d.label)}</h3><p class="muted">${d.n} known problem(s) · ${d.scope==='runtime'?'ships to production':'developer tool only'}</p>${pathHTML(fs[0].dependency_paths[0]||[d.label])}<div style="margin-top:12px">${fs.map(f=>`<div class="fitem" data-fid="${esc(f.id)}"><div class="top">${badge(f)}<span class="chip mono">${esc(f.vuln_ids[0])}</span>${f.fixed_version?`<span class="chip">fix: ${esc(f.fixed_version.split(',')[0])}</span>`:''}</div><div class="t">${esc(f.title)}</div></div>`).join('')}</div></div>`); });
+      g.append('circle').attr('r',0).attr('fill',d=>d.mal?'#991b1b':LVC[d.sev]).attr('fill-opacity',.9).attr('stroke','#fff').attr('stroke-width',2).transition().duration(550).delay((d,i)=>i*3).attr('r',d=>d.rr);
+      g.filter(d=>d.mal).append('text').text('!').attr('text-anchor','middle').attr('dy','.35em').attr('font-size',13).attr('font-weight',800).attr('fill','#fff');
+      g.filter(d=>d.rr>=17&&!d.mal).append('text').text(d=>d.n).attr('text-anchor','middle').attr('dy','.35em').attr('font-size',10.5).attr('font-weight',800).attr('fill','#fff');
+      g.filter(d=>d.rr>=20).append('text').text(d=>d.label.length>16?d.label.slice(0,15)+'…':d.label).attr('text-anchor','middle').attr('y',d=>d.rr+13).attr('font-size',10.5).attr('font-weight',700).attr('fill','#334155');
+      g.on('mousemove',(e,d)=>showTip(e,`<b>${esc(d.label)}</b><br>${d.n} advisory${d.n>1?'ies':''} · worst ${d.sev}<br>${d.scope==='runtime'?'Ships to production':'Developer dependency'} · level ${d.depth}${d.fix.size?`<br>Fix: ${esc([...d.fix][0])}`:''}`)).on('mouseleave',hideTip)
+       .on('click',(e,d)=>{hideTip();const fs=d.list.sort((a,b)=>b.risk_score-a.risk_score);openDrawer(d.label,`<div style="padding:20px"><h3 class="mono" style="font-size:18px">${esc(d.label)}</h3><p class="muted">${d.n} known problem(s) · ${d.scope==='runtime'?'ships to production':'developer dependency'}</p>${pathHTML(fs[0].dependency_paths[0]||[d.label])}<div style="margin-top:12px">${fs.map(f=>`<div class="fitem" data-fid="${esc(f.id)}"><div class="top">${badge(f)}<span class="chip mono">${esc(f.vuln_ids[0])}</span>${f.fixed_version?`<span class="chip">fix: ${esc(f.fixed_version.split(',')[0])}</span>`:''}</div><div class="t">${esc(f.title)}</div></div>`).join('')}</div></div>`);});
+    };
+    $('#vsearch').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};
+    $('#vscope').onchange=e=>{scope=e.target.value;render()};
+    $('#vpriority').querySelectorAll('[data-pkg]').forEach(row=>row.onclick=()=>{
+      const p=P.find(x=>x.label===row.dataset.pkg);if(!p)return;
+      const fs=p.list.sort((a,b)=>b.risk_score-a.risk_score);
+      openDrawer(p.label,`<div style="padding:20px"><h3 class="mono" style="font-size:18px">${esc(p.label)}</h3><p class="muted">${p.n} known problem(s) · ${p.scope==='runtime'?'ships to production':'developer dependency'}</p>${pathHTML(fs[0].dependency_paths[0]||[p.label])}<div style="margin-top:12px">${fs.map(f=>`<div class="fitem" data-fid="${esc(f.id)}"><div class="top">${badge(f)}<span class="chip mono">${esc(f.vuln_ids[0])}</span>${f.fixed_version?`<span class="chip">fix: ${esc(f.fixed_version.split(',')[0])}</span>`:''}</div><div class="t">${esc(f.title)}</div></div>`).join('')}</div></div>`);
+    });
+    render();
   };
-  const drawTable = () => { $('#vbox').innerHTML = `<div style="max-height:640px;overflow:auto"><table class="tbl"><thead><tr><th>Package</th><th>Problems</th><th>Worst</th><th>Where</th><th>Level</th><th>Upgrade to</th></tr></thead><tbody>${P.sort((a,b)=>b.worst-a.worst).map(p=>`<tr class="click" data-fid="${esc(p.list[0].id)}"><td class="mono"><b>${esc(p.label)}</b>${p.mal?' ☠️':''}</td><td>${p.n}</td><td><span class="badge b-${p.sev}">${p.sev}</span></td><td>${scopeChip(p.scope)}</td><td>${p.depth}</td><td class="mono small">${esc([...p.fix].join(', ')||'-')}</td></tr>`).join('')}</tbody></table></div>`; bindFindingLinks($('#vbox')); };
+  const drawTable = () => { $('#vbox').innerHTML = `<div class="card vuln-table-card"><div class="toolbar"><input class="in" id="vtableSearch" placeholder="Search package or advisory" style="flex:1;min-width:220px"><div class="small muted">${P.length} affected packages</div></div><div class="tblwrap"><table class="tbl"><thead><tr><th>Package</th><th>Problems</th><th>Worst</th><th>Exposure</th><th>Dependency depth</th><th>Recommended fix</th></tr></thead><tbody id="vtableBody">${P.sort((a,b)=>b.worst-a.worst).map(p=>`<tr class="click" data-pkg="${esc(p.label)}"><td class="mono"><b>${esc(p.label)}</b>${p.mal?' <span class="chip" style="background:#fee2e2;color:#b91c1c">Malware</span>':''}</td><td>${p.n}</td><td><span class="badge b-${p.sev}">${p.sev}</span></td><td>${scopeChip(p.scope)}</td><td>${p.depth}</td><td class="mono small">${esc([...p.fix].join(', ')||'-')}</td></tr>`).join('')}</tbody></table></div></div>`;
+    $('#vtableSearch').oninput=e=>{
+      const q=e.target.value.trim().toLowerCase();
+      $('#vtableBody').innerHTML=P.filter(p=>p.label.toLowerCase().includes(q)||p.list.some(f=>f.vuln_ids.join(' ').toLowerCase().includes(q))).sort((a,b)=>b.worst-a.worst).map(p=>`<tr class="click" data-pkg="${esc(p.label)}"><td class="mono"><b>${esc(p.label)}</b>${p.mal?' <span class="chip" style="background:#fee2e2;color:#b91c1c">Malware</span>':''}</td><td>${p.n}</td><td><span class="badge b-${p.sev}">${p.sev}</span></td><td>${scopeChip(p.scope)}</td><td>${p.depth}</td><td class="mono small">${esc([...p.fix].join(', ')||'-')}</td></tr>`).join('');
+      bindTableRows();
+    };
+    const bindTableRows=()=>$('#vtableBody').querySelectorAll('[data-pkg]').forEach(row=>row.onclick=()=>{
+      const p=P.find(x=>x.label===row.dataset.pkg);if(!p)return;const fs=p.list.sort((a,b)=>b.risk_score-a.risk_score);
+      openDrawer(p.label,`<div style="padding:20px"><h3 class="mono" style="font-size:18px">${esc(p.label)}</h3><p class="muted">${p.n} known problem(s) · ${p.scope==='runtime'?'ships to production':'developer dependency'}</p>${pathHTML(fs[0].dependency_paths[0]||[p.label])}<div style="margin-top:12px">${fs.map(f=>`<div class="fitem" data-fid="${esc(f.id)}"><div class="top">${badge(f)}<span class="chip mono">${esc(f.vuln_ids[0])}</span>${f.fixed_version?`<span class="chip">fix: ${esc(f.fixed_version.split(',')[0])}</span>`:''}</div><div class="t">${esc(f.title)}</div></div>`).join('')}</div></div>`);
+    });
+    bindTableRows();
+  };
   el.querySelectorAll('.seg button').forEach(b => b.onclick = () => { el.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on', x===b));
     if (b.dataset.v === 'map') { $('#vbox').innerHTML = '<div id="swarm"></div>'; drawMap(); } else drawTable(); });
   bindFindingLinks(el);
   requestAnimationFrame(drawMap);
+}
+
+function vulns(el){
+  const V = F.filter(f => ['vulnerability','malicious-package'].includes(f.category));
+  const inv = {}; (R.inventory||[]).forEach(c => { if (!(c.label in inv) || c.depth < inv[c.label].depth) inv[c.label] = c; });
+  const pk = {};
+  V.forEach(f => {
+    const p = pk[f.component] = pk[f.component] || {label:f.component,list:[],worst:0,mal:false,scope:f.scope,fix:new Set()};
+    p.list.push(f); p.worst=Math.max(p.worst,f.risk_score||0);
+    p.mal=p.mal||f.category==='malicious-package';
+    if(f.scope==='runtime') p.scope='runtime';
+    if(f.fixed_version) p.fix.add(f.fixed_version.split(',')[0]);
+  });
+  const P = Object.values(pk).map(p => {
+    const severity = ['CRITICAL','HIGH','MEDIUM','LOW'].find(s =>
+      p.list.some(f => String(f.severity||f.risk_level||'').toUpperCase()===s)
+    ) || 'LOW';
+    return {...p,depth:inv[p.label]?.depth||1,n:p.list.length,sev:severity.charAt(0)+severity.slice(1).toLowerCase()};
+  });
+  const sevCount={};
+  V.forEach(f=>{const s=(f.severity||f.risk_level||'LOW').toUpperCase();sevCount[s]=(sevCount[s]||0)+1});
+  const mals=P.filter(p=>p.mal);
+  const runtime=P.filter(p=>p.scope==='runtime').length;
+  const fixable=P.filter(p=>p.fix.size).length;
+  let view='packages',filter='all',query='';
+
+  el.innerHTML=`<div class="vx-head"><div><h2>Security posture</h2><p>Review exposed packages, understand severity, and decide what to fix first.</p></div><span class="vx-live"><i></i>${fmt(V.length)} advisories loaded</span></div>
+    <div class="vx-hero">
+      <section class="vx-posture"><div class="eyebrow">Vulnerability workspace</div><h3>${mals.length?`${mals.length} malware package${mals.length>1?'s':''} detected`:`${P.length} affected packages need review`}</h3><p>${runtime} packages ship to production. ${fixable} have a known upgrade path; prioritize production and critical findings first.</p><div class="vx-actions"><span>${runtime} in production</span><span>${fixable} fixable</span></div></section>
+      ${[['CRITICAL','Critical',sevCount.CRITICAL||0,'var(--crit)'],['HIGH','High',sevCount.HIGH||0,'var(--high)'],['MEDIUM','Medium',sevCount.MEDIUM||0,'var(--med)'],['LOW','Low',sevCount.LOW||0,'var(--low)']].map(([,label,count,color])=>`<section class="vx-metric" style="--vx-c:${color}"><div class="vx-metric-head"><span>${label}</span><i></i></div><strong>${fmt(count)}</strong><small>advisories</small></section>`).join('')}
+    </div>
+    <div class="vx-toolbar"><input class="in" id="vxSearch" placeholder="Search a package or advisory…"><div class="vx-filters">
+      <button class="vx-chip on" data-vxfilter="all">All <b>${P.length}</b></button><button class="vx-chip" data-vxfilter="runtime">Production <b>${runtime}</b></button><button class="vx-chip" data-vxfilter="dev">Developer <b>${P.length-runtime}</b></button><button class="vx-chip" data-vxfilter="fix">Fix available <b>${fixable}</b></button><button class="vx-chip" data-vxfilter="malware">Malware <b>${mals.length}</b></button>
+    </div></div>
+    <div class="vx-layout">
+      <section class="vx-listcard"><div class="vx-listhead"><b id="vxListTitle">Affected packages</b><div class="vx-viewtog"><button class="on" data-vxview="packages">Packages</button><button data-vxview="advisories">Advisories</button></div></div><div id="vxContent"></div></section>
+      <aside class="vx-side"><section class="vx-sidecard"><h3>Remediation progress</h3><div class="small muted">Packages with a published upgrade</div><div class="vx-profile"><div class="vx-ring" style="--vx-pct:${P.length?Math.round(fixable/P.length*100):0}"><strong>${P.length?Math.round(fixable/P.length*100):0}%</strong></div><div class="vx-profile-copy"><b>${fixable} fixable</b><span>${P.length-fixable} need more investigation</span></div></div></section>
+      <section class="vx-sidecard"><h3>Priority queue</h3><div class="small muted">Exposure × severity × advisory volume</div><div class="vx-focus">${[...P].sort((a,b)=>b.worst-a.worst||b.n-a.n).slice(0,5).map(p=>`<div class="vx-focus-row" data-vxpkg="${esc(p.label)}"><div><div class="mono">${esc(p.label)}</div><span>${p.n} advisory${p.n>1?'ies':''} · level ${p.depth}</span></div><span class="badge b-${p.sev}">${p.sev}</span></div>`).join('')}</div></section></aside>
+    </div>`;
+
+  const openPackage=p=>{
+    const fs=p.list.sort((a,b)=>b.risk_score-a.risk_score);
+    openDrawer(p.label,`<div style="padding:20px"><div class="eyebrow">${p.n} known advisory${p.n>1?'ies':''}</div><h3 class="mono" style="font-size:18px;margin:5px 0 8px">${esc(p.label)}</h3><p class="muted">${p.scope==='runtime'?'Ships to production':'Developer-only dependency'} · dependency level ${p.depth}</p>${pathHTML(fs[0].dependency_paths[0]||[p.label])}<div style="margin-top:14px">${fs.map(f=>`<div class="fitem" data-fid="${esc(f.id)}"><div class="top">${badge(f)}<span class="chip mono">${esc(f.vuln_ids[0]||'')}</span>${f.fixed_version?`<span class="chip">fix: ${esc(f.fixed_version.split(',')[0])}</span>`:''}</div><div class="t">${esc(f.title)}</div></div>`).join('')}</div></div>`);
+  };
+  const bindPackageRows=()=>el.querySelectorAll('[data-vxpkg]').forEach(row=>row.onclick=()=>{const p=P.find(x=>x.label===row.dataset.vxpkg);if(p)openPackage(p)});
+  const render=()=>{
+    let filtered=P.filter(p=>{
+      const matchesQuery=!query||p.label.toLowerCase().includes(query)||p.list.some(f=>(f.vuln_ids||[]).join(' ').toLowerCase().includes(query));
+      const matchesFilter=filter==='all'||(filter==='runtime'&&p.scope==='runtime')||(filter==='dev'&&p.scope!=='runtime')||(filter==='fix'&&p.fix.size)||(filter==='malware'&&p.mal);
+      return matchesQuery&&matchesFilter;
+    }).sort((a,b)=>b.worst-a.worst||b.n-a.n);
+    $('#vxListTitle').textContent=view==='packages'?`${filtered.length} affected package${filtered.length===1?'':'s'}`:`${filtered.reduce((n,p)=>n+p.n,0)} advisories`;
+    if(view==='packages'){
+      $('#vxContent').innerHTML=filtered.length?`<div class="vx-cards">${filtered.map(p=>{
+        const color=p.mal?'#991b1b':LVC[p.sev]||'#64748b',fix=p.fix.size?[...p.fix][0]:null;
+        return `<article class="vx-package" data-vxpkg="${esc(p.label)}" style="--vx-c:${color};--vx-width:${Math.min(100,20+p.worst)}%"><div class="vx-package-top"><div class="vx-package-name">${esc(p.label)}</div><div class="vx-package-count">${p.n}</div></div><div class="vx-package-meta"><span class="badge b-${p.sev}">${p.mal?'Malware':p.sev}</span><span class="chip ${p.scope==='runtime'?'scope-runtime':'scope-dev'}">${p.scope==='runtime'?'Production':'Developer'}</span></div><div class="vx-bar"><i></i></div><div class="vx-package-foot"><span>Level ${p.depth}</span><b>${fix?'Upgrade '+esc(fix):'Review manually'}</b></div></article>`;
+      }).join('')}</div>`:`<div class="vx-empty"><b>No matching packages</b><div class="small">Try clearing the search or changing the filter.</div></div>`;
+      bindPackageRows();
+    }else{
+      const advisories=filtered.flatMap(p=>p.list.map(f=>({...f,package:p.label}))).sort((a,b)=>(b.risk_score||0)-(a.risk_score||0));
+      $('#vxContent').innerHTML=advisories.length?`<div class="vx-advisories">${advisories.map(f=>{
+        const sev=f.risk_level||f.severity||'Low';
+        return `<div class="vx-advisory" data-fid="${esc(f.id)}"><div><b>${esc(f.vuln_ids[0]||f.title)}</b><span class="mono">${esc(f.package)}</span><span>${esc(f.title)}</span></div><span class="badge b-${sev}">${sev}</span></div>`;
+      }).join('')}</div>`:`<div class="vx-empty"><b>No matching advisories</b></div>`;
+      bindFindingLinks($('#vxContent'));
+    }
+  };
+  $('#vxSearch').oninput=e=>{query=e.target.value.trim().toLowerCase();render()};
+  el.querySelectorAll('[data-vxfilter]').forEach(b=>b.onclick=()=>{filter=b.dataset.vxfilter;el.querySelectorAll('[data-vxfilter]').forEach(x=>x.classList.toggle('on',x===b));render()});
+  el.querySelectorAll('[data-vxview]').forEach(b=>b.onclick=()=>{view=b.dataset.vxview;el.querySelectorAll('[data-vxview]').forEach(x=>x.classList.toggle('on',x===b));render()});
+  bindFindingLinks(el);
+  bindPackageRows();
+  render();
 }
 
 /* ================= 7. SUSPICIOUS CHANGES (case files) ================= */
